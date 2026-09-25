@@ -8,7 +8,7 @@ export default function Layout({ children }) {
     <div className="mx-auto max-w-3xl">
       <div className="mb-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.05),0_4px_6px_-2px_rgba(0,0,0,0.025)]">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-2.5 border-b-2 border-slate-200 pb-3.5">
-          <div className="text-lg font-extrabold text-slate-900">ALEOS Rewards Network</div>
+          <div className="text-lg font-extrabold text-slate-900">ALEOS Rewards Networks</div>
           <div className="flex gap-2">
             <Link
               to="/"
