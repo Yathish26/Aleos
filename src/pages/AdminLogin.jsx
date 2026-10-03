@@ -1,40 +1,50 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { api } from '../api'
 import Layout from '../components/Layout'
-import { btnAdmin, infoBoxAdminClass, inputClass, labelClass } from '../components/ui'
-import { useMembers } from '../store/MembersContext'
+import { btnAdmin, errorBoxClass, infoBoxAdminClass, inputClass, labelClass } from '../components/ui'
+import { useAuth } from '../store/auth'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
-  const { isAdminLoggedIn, adminLogin } = useMembers()
+  const { adminToken, signInAdmin } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  if (isAdminLoggedIn) {
+  if (adminToken) {
     return <Navigate to="/admin/dashboard" replace />
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    if (adminLogin(username, password)) {
+    setError('')
+    setLoading(true)
+    try {
+      const data = await api('/auth/admin/login', { method: 'POST', body: { username: username.trim(), password } })
+      signInAdmin(data.token)
       navigate('/admin/dashboard')
-    } else {
-      alert('Invalid Admin ID or Password! Use: admin / admin123')
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
     <Layout>
       <h2 className="mt-0 mb-4 text-xl font-semibold text-indigo-600">Admin Panel Login</h2>
-      <div className={infoBoxAdminClass}>
-        🔑 <strong>Credentials:</strong> Username: <code>admin</code> | Password: <code>admin123</code>
-      </div>
+      <div className={infoBoxAdminClass}>🔑 Restricted area. Log in with your admin account.</div>
+
+      {error && <div className={errorBoxClass}>{error}</div>}
 
       <form onSubmit={handleSubmit}>
         <label className={labelClass}>Admin Username</label>
         <input
           type="text"
           placeholder="admin"
+          autoComplete="username"
           required
           value={username}
           onChange={(e) => setUsername(e.target.value)}
@@ -45,14 +55,15 @@ export default function AdminLogin() {
         <input
           type="password"
           placeholder="••••••••"
+          autoComplete="current-password"
           required
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className={inputClass}
         />
 
-        <button type="submit" className={`${btnAdmin} mt-2.5 w-full`}>
-          Login to Admin Panel
+        <button type="submit" className={`${btnAdmin} mt-2.5 w-full`} disabled={loading}>
+          {loading ? 'Logging in…' : 'Login to Admin Panel'}
         </button>
       </form>
     </Layout>

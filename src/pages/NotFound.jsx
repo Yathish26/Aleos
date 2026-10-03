@@ -12,7 +12,7 @@ export default function NotFound() {
           The page you're looking for doesn't exist or may have been moved.
         </p>
         <Link to="/" className={`${btnPrimary} mt-2`}>
-          Back to Member Portal
+          Back to Home
         </Link>
       </div>
     </Layout>
