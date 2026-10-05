@@ -6,6 +6,8 @@ import MemberLogin from './pages/MemberLogin'
 import MemberDashboard from './pages/MemberDashboard'
 import AdminLogin from './pages/AdminLogin'
 import AdminDashboard from './pages/AdminDashboard'
+import TermsMember from './pages/TermsMember'
+import TermsMerchant from './pages/TermsMerchant'
 import NotFound from './pages/NotFound'
 
 function App() {
@@ -18,6 +20,8 @@ function App() {
       <Route path="/dashboard" element={<MemberDashboard />} />
       <Route path="/admin" element={<AdminLogin />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/terms/member" element={<TermsMember />} />
+      <Route path="/terms/merchant" element={<TermsMerchant />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

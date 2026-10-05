@@ -5,6 +5,36 @@ import Layout from '../components/Layout'
 import { badgePointsClass, btnSecondary, errorBoxClass, inputClass, tdClass, thClass } from '../components/ui'
 import { useAuth } from '../store/auth'
 
+const shareBtnClass =
+  'flex min-w-25 flex-1 items-center justify-center rounded-lg p-2.5 text-[13px] font-bold text-white transition-opacity hover:opacity-90'
+
+function ShareButtons({ message, link, telegramText }) {
+  const smsSeparator = /iPad|iPhone|iPod/.test(navigator.userAgent) ? '&' : '?'
+  return (
+    <div className="flex flex-wrap gap-2.5">
+      <a
+        href={`https://wa.me/?text=${encodeURIComponent(message)}`}
+        target="_blank"
+        rel="noreferrer"
+        className={`${shareBtnClass} bg-[#25D366]`}
+      >
+        💬 WhatsApp
+      </a>
+      <a
+        href={`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent(telegramText)}`}
+        target="_blank"
+        rel="noreferrer"
+        className={`${shareBtnClass} bg-[#229ED9]`}
+      >
+        ✈️ Telegram
+      </a>
+      <a href={`sms:${smsSeparator}body=${encodeURIComponent(message)}`} className={`${shareBtnClass} bg-violet-500`}>
+        📱 SMS
+      </a>
+    </div>
+  )
+}
+
 export default function MemberDashboard() {
   const navigate = useNavigate()
   const { memberToken, signOutMember } = useAuth()
@@ -39,20 +69,40 @@ export default function MemberDashboard() {
   const { member, transactions, referrals } = data
   const referralLink = `${window.location.origin}/join/member?ref=${member.referralCode}`
   const shareMessage = `Join ALEOS Rewards network as a member and earn points on your purchases! Use my referral code ${member.referralCode} or sign up here: ${referralLink}`
-  const smsSeparator = /iPad|iPhone|iPod/.test(navigator.userAgent) ? '&' : '?'
+  const merchantLink = `${window.location.origin}/join/merchant`
+  const merchantMessage = `Hello Sir/Madam 👋
+Are you tired of online platforms demanding heavy discounts and huge commissions from your hard-earned profits?
+Meet ALEOS — India's zero-cost customer growth app for retail shops!
+
+📌 Why local shops love ALEOS:
+
+1) 100% Free Signup: No setup fee, no machine charges.
+
+2) 2-Minute Self Setup: Download app & activate your store counter by yourself in 2 minutes.
+
+3) No Machines Needed – Works on your existing phone with a simple QR code.
+
+4) Your Margin, Your Rules:
+* Mobile Shop? Set 2%
+* Restaurant/Cafe? Set 10%
+* Salon/Spa? Set 20%
+
+5) Bring Back Old Customers: Automatic reward points so shoppers choose your store every time.
+
+📍 Start today in 2 minutes: ${merchantLink}`
 
   function handleLogout() {
     signOutMember()
     navigate('/')
   }
 
-  async function copyRefLink() {
+  async function copyText(text, which) {
     try {
-      await navigator.clipboard.writeText(referralLink)
-      setCopied(true)
+      await navigator.clipboard.writeText(text)
+      setCopied(which)
       setTimeout(() => setCopied(false), 2000)
     } catch {
-      setError('Could not copy automatically — please copy the link manually.')
+      setError('Could not copy automatically — please copy it manually.')
     }
   }
 
@@ -93,35 +143,12 @@ export default function MemberDashboard() {
 
         <div className="mb-3 flex items-center gap-2">
           <input type="text" readOnly value={referralLink} className={`${inputClass} mb-0 text-xs`} />
-          <button className={`${btnSecondary} whitespace-nowrap`} onClick={copyRefLink}>
-            {copied ? 'Copied ✓' : 'Copy Link'}
+          <button className={`${btnSecondary} whitespace-nowrap`} onClick={() => copyText(referralLink, 'member')}>
+            {copied === 'member' ? 'Copied ✓' : 'Copy Link'}
           </button>
         </div>
 
-        <div className="flex flex-wrap gap-2.5">
-          <a
-            href={`https://wa.me/?text=${encodeURIComponent(shareMessage)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex min-w-25 flex-1 items-center justify-center rounded-lg bg-[#25D366] p-2.5 text-[13px] font-bold text-white transition-opacity hover:opacity-90"
-          >
-            💬 WhatsApp
-          </a>
-          <a
-            href={`https://t.me/share/url?url=${encodeURIComponent(referralLink)}&text=${encodeURIComponent('Join ALEOS Rewards as a Member!')}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex min-w-25 flex-1 items-center justify-center rounded-lg bg-[#229ED9] p-2.5 text-[13px] font-bold text-white transition-opacity hover:opacity-90"
-          >
-            ✈️ Telegram
-          </a>
-          <a
-            href={`sms:${smsSeparator}body=${encodeURIComponent(shareMessage)}`}
-            className="flex min-w-25 flex-1 items-center justify-center rounded-lg bg-violet-500 p-2.5 text-[13px] font-bold text-white transition-opacity hover:opacity-90"
-          >
-            📱 SMS
-          </a>
-        </div>
+        <ShareButtons message={shareMessage} link={referralLink} telegramText="Join ALEOS Rewards as a Member!" />
 
         {referrals.length > 0 && (
           <div className="mt-4 text-[13px] text-slate-600">
@@ -129,6 +156,29 @@ export default function MemberDashboard() {
             {referrals.map((r) => r.name).join(', ')}
           </div>
         )}
+      </div>
+
+      <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+        <h4 className="mt-0 mb-2 font-semibold text-slate-700">🏪 Invite a Shop / Merchant</h4>
+        <p className="mb-3 text-[13px] text-slate-500">
+          Know a local shop, cafe or salon? Send them this message — signing up is free for merchants.
+        </p>
+
+        <textarea
+          readOnly
+          value={merchantMessage}
+          rows={8}
+          className={`${inputClass} mb-2 resize-y text-xs leading-relaxed`}
+        />
+        <button className={`${btnSecondary} mb-3 w-full`} onClick={() => copyText(merchantMessage, 'merchant')}>
+          {copied === 'merchant' ? 'Copied ✓' : 'Copy Message'}
+        </button>
+
+        <ShareButtons
+          message={merchantMessage}
+          link={merchantLink}
+          telegramText="Meet ALEOS — India's zero-cost customer growth app for retail shops!"
+        />
       </div>
 
       <h3 className="mb-3 text-slate-700">Merchant Points Ledger</h3>

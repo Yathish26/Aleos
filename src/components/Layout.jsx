@@ -6,7 +6,7 @@ import { containerClass } from './ui'
 // Full-width site frame: sticky header (with a menu button on mobile), page content, footer.
 // Pages get a padded, centered content area by default; pass `bare` to draw full-width sections yourself.
 export default function Layout({ children, bare = false }) {
-  const { memberToken, adminToken } = useAuth()
+  const { memberToken } = useAuth()
   const { pathname } = useLocation()
   // Remember which page the mobile menu was opened on, so it closes by itself after navigating
   const [menuOpenedOn, setMenuOpenedOn] = useState(null)
@@ -15,7 +15,6 @@ export default function Layout({ children, bare = false }) {
   const links = [
     { to: '/', label: 'Home', end: true },
     memberToken ? { to: '/dashboard', label: 'My Dashboard' } : { to: '/login', label: 'Member Login' },
-    { to: adminToken ? '/admin/dashboard' : '/admin', label: 'Admin' },
   ]
 
   const linkClass = ({ isActive }) =>
@@ -94,12 +93,18 @@ export default function Layout({ children, bare = false }) {
           className={`${containerClass} flex flex-col items-center justify-between gap-3 py-6 text-[13px] text-slate-500 sm:flex-row`}
         >
           <span>© {new Date().getFullYear()} ALEOS Rewards Network</span>
-          <div className="flex gap-4">
+          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
             <Link to="/join/member" className="hover:text-slate-800">
               Become a member
             </Link>
             <Link to="/join/merchant" className="hover:text-slate-800">
               For merchants
+            </Link>
+            <Link to="/terms/member" className="hover:text-slate-800">
+              Member Terms
+            </Link>
+            <Link to="/terms/merchant" className="hover:text-slate-800">
+              Merchant Terms
             </Link>
           </div>
         </div>

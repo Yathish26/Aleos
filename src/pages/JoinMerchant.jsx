@@ -28,6 +28,7 @@ export default function JoinMerchant() {
   const [loadError, setLoadError] = useState('')
   const [category, setCategory] = useState('')
   const [form, setForm] = useState(emptyForm)
+  const [agreed, setAgreed] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(null)
@@ -202,7 +203,24 @@ export default function JoinMerchant() {
 
         <div className={infoBoxClass}>📋 You'll hear from us by email once your application is reviewed.</div>
 
-        <button type="submit" className={`${btnPrimary} w-full py-3`} disabled={submitting}>
+        <label className="mb-4 flex items-start gap-2.5 text-[13px] leading-relaxed text-slate-600">
+          <input
+            type="checkbox"
+            required
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-blue-600"
+          />
+          <span>
+            I agree to the{' '}
+            <Link to="/terms/merchant" target="_blank" className="font-semibold text-blue-600">
+              Merchant Terms &amp; Conditions
+            </Link>
+            .
+          </span>
+        </label>
+
+        <button type="submit" className={`${btnPrimary} w-full py-3`} disabled={!agreed || submitting}>
           {submitting ? 'Submitting…' : 'Submit Application'}
         </button>
       </form>

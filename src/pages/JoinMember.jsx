@@ -32,6 +32,7 @@ export default function JoinMember() {
   const [mobile, setMobile] = useState('')
   const [referralCode, setReferralCode] = useState(refCode)
   const [otp, setOtp] = useState('')
+  const [agreed, setAgreed] = useState(false)
 
   const [otpSent, setOtpSent] = useState(false)
   const [otpMessage, setOtpMessage] = useState('')
@@ -203,10 +204,27 @@ export default function JoinMember() {
           className={`${inputClass} uppercase`}
         />
 
+        <label className="mb-4 flex items-start gap-2.5 text-[13px] leading-relaxed text-slate-600">
+          <input
+            type="checkbox"
+            required
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className="mt-0.5 h-4 w-4 shrink-0 accent-blue-600"
+          />
+          <span>
+            I agree to the{' '}
+            <Link to="/terms/member" target="_blank" className="font-semibold text-blue-600">
+              Member Terms &amp; Conditions
+            </Link>
+            .
+          </span>
+        </label>
+
         <button
           type="submit"
           className={`${btnPrimary} mt-2 w-full py-3`}
-          disabled={!otpSent || otp.length !== 6 || joining}
+          disabled={!otpSent || otp.length !== 6 || !agreed || joining}
         >
           {joining ? 'Joining…' : 'Verify OTP & Join'}
         </button>
