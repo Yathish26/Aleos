@@ -21,7 +21,7 @@ const statusBadge = {
   rejected: 'bg-red-100 text-red-700',
 }
 
-const merchantFilters = ['pending', 'approved', 'rejected', 'all']
+const merchantFilters = ['approved', 'pending', 'rejected', 'all']
 
 function StatTile({ label, value, tone = 'slate' }) {
   const tones = {
@@ -44,7 +44,7 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState('merchants')
   const [stats, setStats] = useState(null)
   const [merchants, setMerchants] = useState([])
-  const [merchantFilter, setMerchantFilter] = useState('pending')
+  const [merchantFilter, setMerchantFilter] = useState('approved')
   const [members, setMembers] = useState([])
   const [search, setSearch] = useState('')
   const [error, setError] = useState('')
@@ -160,11 +160,16 @@ export default function AdminDashboard() {
               <button
                 key={f}
                 onClick={() => setMerchantFilter(f)}
-                className={`rounded-full px-3 py-1 text-xs font-semibold capitalize ${
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold capitalize ${
                   merchantFilter === f ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 {f}
+                {f === 'pending' && stats?.pendingMerchants > 0 && (
+                  <span className="flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] leading-none font-bold text-white">
+                    {stats.pendingMerchants}
+                  </span>
+                )}
               </button>
             ))}
           </div>
@@ -197,6 +202,16 @@ export default function AdminDashboard() {
                           {m.ownerName}
                           {m.city ? ` · ${m.city}` : ''}
                         </span>
+                        {m.googleBusinessLink && (
+                          <a
+                            href={m.googleBusinessLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block text-xs font-semibold text-blue-600 hover:underline"
+                          >
+                            Google Business ↗
+                          </a>
+                        )}
                       </td>
                       <td className={`${tdClass} text-slate-600`}>{m.category}</td>
                       <td className={`${tdClass} text-xs text-slate-600`}>

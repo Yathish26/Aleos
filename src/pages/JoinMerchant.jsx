@@ -21,7 +21,7 @@ const categoryIcons = {
   Other: '🏷️',
 }
 
-const emptyForm = { businessName: '', ownerName: '', email: '', mobile: '', city: '' }
+const emptyForm = { businessName: '', ownerName: '', email: '', mobile: '', city: '', googleBusinessLink: '' }
 
 export default function JoinMerchant() {
   const [categories, setCategories] = useState([])
@@ -200,6 +200,15 @@ export default function JoinMerchant() {
 
         <label className={labelClass}>City</label>
         <input type="text" placeholder="Bengaluru" value={form.city} onChange={update('city')} className={inputClass} />
+
+        <label className={labelClass}>Google Business Link (optional)</label>
+        <input
+          type="url"
+          placeholder="https://maps.app.goo.gl/..."
+          value={form.googleBusinessLink}
+          onChange={update('googleBusinessLink')}
+          className={inputClass}
+        />
 
         <div className={infoBoxClass}>📋 You'll hear from us by email once your application is reviewed.</div>
 
