@@ -1,5 +1,6 @@
-// Talks to the AleosSR backend. Set VITE_API_URL in production (e.g. on Vercel).
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+// Talks to the AleosSR backend. VITE_API_URL comes from .env locally, and from the host's settings (e.g. Vercel) in production.
+const API_URL = import.meta.env.VITE_API_URL
+if (!API_URL) console.error('VITE_API_URL is not set — add it to Aleos/.env (e.g. http://localhost:5000)')
 
 export async function api(path, { method = 'GET', body, token } = {}) {
   let res
