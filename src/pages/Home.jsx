@@ -222,9 +222,12 @@ function JoinDropdown() {
 
 function PerkList({ items, dark = false }) {
   return (
-    <ul className="m-0 mb-7 list-none space-y-3 p-0">
+    <ul className="m-0 mb-6 list-none space-y-3 p-0 sm:mb-7">
       {items.map((item) => (
-        <li key={item} className={`flex items-start gap-2.5 text-[15px] ${dark ? 'text-blue-100' : 'text-slate-600'}`}>
+        <li
+          key={item}
+          className={`flex items-start gap-2.5 text-sm sm:text-[15px] ${dark ? 'text-blue-100' : 'text-slate-600'}`}
+        >
           <span
             className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
               dark ? 'bg-brand-cyan/20 text-brand-cyan' : 'bg-brand-light text-brand-blue'
@@ -241,10 +244,12 @@ function PerkList({ items, dark = false }) {
 
 function SectionHeading({ eyebrow, title, text }) {
   return (
-    <div className="mx-auto mb-12 max-w-2xl text-center">
-      <div className="mb-3 text-xs font-bold tracking-[0.2em] text-brand-blue uppercase">{eyebrow}</div>
-      <h2 className="m-0 text-3xl font-extrabold tracking-tight text-brand-navy sm:text-4xl">{title}</h2>
-      {text && <p className="mt-4 mb-0 text-base leading-relaxed text-slate-500">{text}</p>}
+    <div className="mx-auto mb-8 max-w-2xl text-center sm:mb-12">
+      <div className="mb-2 text-[11px] font-bold tracking-[0.2em] text-brand-blue uppercase sm:mb-3 sm:text-xs">
+        {eyebrow}
+      </div>
+      <h2 className="m-0 text-2xl leading-tight font-extrabold tracking-tight text-brand-navy sm:text-4xl">{title}</h2>
+      {text && <p className="mt-3 mb-0 text-sm leading-relaxed text-slate-500 sm:mt-4 sm:text-base">{text}</p>}
     </div>
   )
 }
@@ -254,11 +259,11 @@ function HeroCard() {
   return (
     <div className="relative mx-auto w-full max-w-sm" aria-hidden="true">
       <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-brand-cyan/40 to-brand-blue/40 blur-2xl" />
-      <div className="relative rounded-3xl border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
-        <div className="mb-5 flex items-center justify-between">
+      <div className="relative rounded-3xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
+        <div className="mb-4 flex items-center justify-between sm:mb-5">
           <div>
             <div className="text-xs font-semibold tracking-wide text-blue-100/80 uppercase">Your points</div>
-            <div className="font-display text-4xl font-extrabold text-white">1,250</div>
+            <div className="font-display text-3xl font-extrabold text-white sm:text-4xl">1,250</div>
           </div>
           <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-cyan text-brand-navy">
             <Icon name="gift" className="h-6 w-6" />
@@ -266,7 +271,7 @@ function HeroCard() {
         </div>
         <div className="space-y-2.5">
           {sampleActivity.map((a) => (
-            <div key={a.shop} className="flex items-center gap-3 rounded-2xl bg-white/95 px-3.5 py-3">
+            <div key={a.shop} className="flex items-center gap-3 rounded-2xl bg-white/95 px-3 py-2.5 sm:px-3.5 sm:py-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-lg">{a.emoji}</span>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm font-bold text-brand-navy">{a.shop}</div>
@@ -299,30 +304,33 @@ export default function Home() {
         <div className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-brand-cyan/25 blur-3xl" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_0)] bg-size-[24px_24px]" />
 
-        <div className={`${containerClass} relative grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-2 lg:py-28`}>
-          <div>
-            <div className="mb-6 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-[11px] font-semibold tracking-[0.15em] text-blue-100 uppercase sm:text-xs">
+        <div
+          className={`${containerClass} relative grid items-center gap-10 pt-10 pb-20 sm:gap-12 sm:py-20 lg:grid-cols-2 lg:py-28`}
+        >
+          {/* Centred on phones, left-aligned from tablets up */}
+          <div className="text-center sm:text-left">
+            <div className="mb-5 inline-flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[10px] font-semibold tracking-widest text-blue-100 uppercase sm:mb-6 sm:gap-x-2 sm:px-4 sm:text-xs sm:tracking-[0.15em]">
               {pillars.map((p, i) => (
-                <span key={p} className="flex items-center gap-2">
+                <span key={p} className="flex items-center gap-1.5 sm:gap-2">
                   {i > 0 && <span className="text-brand-cyan">|</span>}
                   {p}
                 </span>
               ))}
             </div>
 
-            <h1 className="m-0 text-4xl leading-[1.1] font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="m-0 text-[2.5rem] leading-[1.1] font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
               Shop local.
               <br />
               <span className="bg-linear-to-r from-brand-cyan to-brand-blue bg-clip-text text-transparent">
                 Earn rewards.
               </span>
             </h1>
-            <p className="mt-6 mb-9 max-w-xl text-base leading-relaxed text-blue-100/90 sm:text-lg">
+            <p className="mx-auto mt-4 mb-7 max-w-xl text-[15px] leading-relaxed text-blue-100/90 sm:mx-0 sm:mt-6 sm:mb-9 sm:text-lg">
               A rewards network connecting shoppers and local businesses. Members earn points on every purchase, and
               merchants grow with loyal customers.
             </p>
 
-            <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center">
+            <div className="mx-auto flex max-w-sm flex-col items-stretch gap-3 sm:mx-0 sm:max-w-none sm:flex-row sm:items-center sm:gap-4">
               <JoinDropdown />
               <Link
                 to="/login"
@@ -333,7 +341,7 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-blue-100/80">
+            <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-[13px] text-blue-100/80 sm:mt-8 sm:justify-start sm:gap-x-6 sm:text-sm">
               {['Free to join', 'Points on every bill', 'Works at local shops'].map((t) => (
                 <span key={t} className="flex items-center gap-1.5">
                   <Icon name="check" className="h-4 w-4 text-brand-cyan" strokeWidth={3} />
@@ -348,35 +356,42 @@ export default function Home() {
       </section>
 
       {/* How the points are shared */}
+      {/* A compact row of three on phones too, instead of three tall stacked boxes */}
       <section className="relative z-10 -mt-10 px-4 sm:-mt-12">
-        <div className="mx-auto grid max-w-5xl gap-px overflow-hidden rounded-3xl bg-white/10 shadow-xl shadow-brand-navy/20 sm:grid-cols-3">
+        <div className="mx-auto grid max-w-5xl grid-cols-3 gap-px overflow-hidden rounded-2xl bg-white/10 shadow-xl shadow-brand-navy/20 sm:rounded-3xl">
           {split.map((s) => (
-            <div key={s.label} className="bg-linear-to-br from-brand-navy to-[#123f8a] px-6 py-6 text-center sm:py-7">
-              <div className={`font-display text-3xl font-extrabold sm:text-4xl ${s.tone}`}>{s.value}</div>
-              <div className="mt-1 font-semibold text-white">{s.label}</div>
-              <div className="mt-0.5 text-[13px] text-blue-100/70">{s.text}</div>
+            <div key={s.label} className="bg-linear-to-br from-brand-navy to-[#123f8a] px-2 py-4 text-center sm:px-6 sm:py-7">
+              <div className={`font-display text-2xl font-extrabold sm:text-4xl ${s.tone}`}>{s.value}</div>
+              <div className="mt-0.5 text-xs font-semibold text-white sm:mt-1 sm:text-base">{s.label}</div>
+              <div className="mt-0.5 hidden text-[13px] text-blue-100/70 sm:block">{s.text}</div>
             </div>
           ))}
         </div>
       </section>
 
       {/* How it works */}
-      <section className={`${containerClass} py-20 sm:py-24`}>
+      <section className={`${containerClass} py-14 sm:py-24`}>
         <SectionHeading eyebrow="How it works" title="Three simple steps to start earning" />
 
-        <div className="relative grid gap-6 sm:grid-cols-3">
+        <div className="relative grid gap-3 sm:grid-cols-3 sm:gap-6">
           {/* Connecting line behind the step numbers */}
           <div className="absolute top-7 right-[16%] left-[16%] hidden h-0.5 bg-linear-to-r from-brand-cyan via-brand-blue to-brand-navy sm:block" />
           {steps.map((step, i) => (
-            <div key={step.title} className="relative rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-sm">
-              <div className="relative mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-navy text-brand-cyan shadow-lg shadow-brand-navy/25">
-                <Icon name={step.icon} className="h-6 w-6" />
+            // Icon beside the text on phones, stacked and centred from tablets up
+            <div
+              key={step.title}
+              className="relative flex items-start gap-4 rounded-2xl border border-slate-100 bg-white p-4 shadow-sm sm:block sm:rounded-3xl sm:p-6 sm:text-center"
+            >
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-brand-navy text-brand-cyan shadow-lg shadow-brand-navy/25 sm:mx-auto sm:mb-5 sm:h-14 sm:w-14">
+                <Icon name={step.icon} className="h-5 w-5 sm:h-6 sm:w-6" />
                 <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-cyan text-xs font-extrabold text-brand-navy ring-4 ring-white">
                   {i + 1}
                 </span>
               </div>
-              <h3 className="m-0 mb-2 text-lg font-bold text-brand-navy">{step.title}</h3>
-              <p className="m-0 text-[15px] leading-relaxed text-slate-500">{step.text}</p>
+              <div className="min-w-0">
+                <h3 className="m-0 mb-1 text-base font-bold text-brand-navy sm:mb-2 sm:text-lg">{step.title}</h3>
+                <p className="m-0 text-sm leading-relaxed text-slate-500 sm:text-[15px]">{step.text}</p>
+              </div>
             </div>
           ))}
         </div>
@@ -384,24 +399,27 @@ export default function Home() {
 
       {/* Why ALEOS */}
       <section className="bg-brand-light/60">
-        <div className={`${containerClass} py-20 sm:py-24`}>
+        <div className={`${containerClass} py-14 sm:py-24`}>
           <SectionHeading
             eyebrow="Why ALEOS"
             title="Why people love ALEOS"
             text="A local rewards app that pays you every time you shop at neighbourhood stores."
           />
 
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
             {benefits.map((benefit) => (
+              // Icon beside the text on phones so six cards don't make a very long page
               <div
                 key={benefit.title}
-                className="group rounded-3xl border border-white bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-blue/10"
+                className="group flex items-start gap-4 rounded-2xl border border-white bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-blue/10 sm:block sm:rounded-3xl sm:p-6"
               >
-                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-light text-brand-blue transition-colors group-hover:bg-brand-navy group-hover:text-brand-cyan">
-                  <Icon name={benefit.icon} />
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-light text-brand-blue transition-colors group-hover:bg-brand-navy group-hover:text-brand-cyan sm:mb-5 sm:h-12 sm:w-12">
+                  <Icon name={benefit.icon} className="h-5 w-5 sm:h-6 sm:w-6" />
                 </div>
-                <h3 className="m-0 mb-2 text-lg font-bold text-brand-navy">{benefit.title}</h3>
-                <p className="m-0 text-[15px] leading-relaxed text-slate-500">{benefit.text}</p>
+                <div className="min-w-0">
+                  <h3 className="m-0 mb-1 text-base font-bold text-brand-navy sm:mb-2 sm:text-lg">{benefit.title}</h3>
+                  <p className="m-0 text-sm leading-relaxed text-slate-500 sm:text-[15px]">{benefit.text}</p>
+                </div>
               </div>
             ))}
           </div>
@@ -409,48 +427,48 @@ export default function Home() {
       </section>
 
       {/* Members & merchants */}
-      <section className={`${containerClass} py-20 sm:py-24`}>
+      <section className={`${containerClass} py-14 sm:py-24`}>
         <SectionHeading eyebrow="Join the network" title="Built for shoppers and shops" />
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-light text-brand-blue">
-              <Icon name="user" className="h-7 w-7" />
+        <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+          <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-9">
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-light text-brand-blue sm:mb-5 sm:h-14 sm:w-14">
+              <Icon name="user" className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
-            <h3 className="m-0 mb-2 text-2xl font-extrabold tracking-tight text-brand-navy">For members</h3>
-            <p className="mt-0 mb-6 leading-relaxed text-slate-500">
+            <h3 className="m-0 mb-2 text-xl font-extrabold tracking-tight text-brand-navy sm:text-2xl">For members</h3>
+            <p className="mt-0 mb-5 text-sm leading-relaxed text-slate-500 sm:mb-6 sm:text-base">
               Get rewarded for shopping at the places you already love.
             </p>
             <PerkList items={memberPerks} />
             <Link
               to="/join/member"
-              className="inline-flex items-center gap-2 rounded-xl bg-brand-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-blue"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-brand-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-blue sm:inline-flex sm:w-auto"
             >
               Join as Member
               <Icon name="arrowRight" className="h-4 w-4" />
             </Link>
           </div>
 
-          <div className="relative overflow-hidden rounded-3xl bg-brand-navy p-7 text-white shadow-xl shadow-brand-navy/20 sm:p-9">
+          <div className="relative overflow-hidden rounded-3xl bg-brand-navy p-5 text-white shadow-xl shadow-brand-navy/20 sm:p-9">
             <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-brand-cyan/20 blur-3xl" />
             <div className="relative">
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-brand-cyan">
-                <Icon name="store" className="h-7 w-7" />
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-brand-cyan sm:mb-5 sm:h-14 sm:w-14">
+                <Icon name="store" className="h-6 w-6 sm:h-7 sm:w-7" />
               </div>
-              <h3 className="m-0 mb-2 text-2xl font-extrabold tracking-tight">For merchants</h3>
-              <p className="mt-0 mb-6 leading-relaxed text-blue-100/80">
+              <h3 className="m-0 mb-2 text-xl font-extrabold tracking-tight sm:text-2xl">For merchants</h3>
+              <p className="mt-0 mb-5 text-sm leading-relaxed text-blue-100/80 sm:mb-6 sm:text-base">
                 Are you a merchant? Join the network and turn shoppers into regulars.
               </p>
               <PerkList items={merchantPerks} dark />
-              <div className="flex flex-wrap items-center gap-4">
+              <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
                 <Link
                   to="/join/merchant"
-                  className="inline-flex items-center gap-2 rounded-xl bg-brand-cyan px-6 py-3 text-sm font-bold text-brand-navy transition-colors hover:bg-white"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-brand-cyan px-6 py-3 text-sm font-bold text-brand-navy transition-colors hover:bg-white sm:inline-flex"
                 >
                   Join as Merchant
                   <Icon name="arrowRight" className="h-4 w-4" />
                 </Link>
-                <Link to="/merchant/login" className="text-sm font-semibold text-blue-100 hover:text-white">
+                <Link to="/merchant/login" className="text-center text-sm font-semibold text-blue-100 hover:text-white">
                   Merchant login →
                 </Link>
               </div>
@@ -460,17 +478,17 @@ export default function Home() {
       </section>
 
       {/* Closing call to action */}
-      <section className="px-4 pb-20 sm:pb-24">
-        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-linear-to-r from-brand-navy via-[#123f8a] to-brand-blue px-6 py-12 text-center text-white sm:px-12 sm:py-16">
+      <section className="px-4 pb-14 sm:pb-24">
+        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-linear-to-r from-brand-navy via-[#123f8a] to-brand-blue px-5 py-10 text-center text-white sm:px-12 sm:py-16">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-size-[22px_22px]" />
           <div className="relative">
-            <h2 className="m-0 text-2xl font-extrabold tracking-tight sm:text-4xl">
+            <h2 className="m-0 text-xl leading-snug font-extrabold tracking-tight sm:text-4xl">
               More than a website — it's a world of opportunities.
             </h2>
-            <p className="mx-auto mt-4 mb-8 max-w-xl text-blue-100/90">
+            <p className="mx-auto mt-3 mb-6 max-w-xl text-sm text-blue-100/90 sm:mt-4 sm:mb-8 sm:text-base">
               Join the shoppers and local businesses growing together on ALEOS.
             </p>
-            <div className="flex flex-col justify-center gap-3 sm:flex-row">
+            <div className="mx-auto flex max-w-sm flex-col justify-center gap-3 sm:max-w-none sm:flex-row">
               <Link
                 to="/join/member"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-cyan px-7 py-3.5 text-sm font-bold text-brand-navy transition-colors hover:bg-white"
