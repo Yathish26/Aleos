@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { api, formatDate } from '../api'
+import { api, formatDate, formatTimeIST } from '../api'
 import Layout from '../components/Layout'
 import {
-  badgePointsClass,
   btnPrimary,
   btnSecondary,
   errorBoxClass,
@@ -58,10 +57,10 @@ export default function MemberDashboard() {
     if (!memberToken) return
     Promise.all([
       api('/members/me', { token: memberToken }),
-      api('/members/me/transactions', { token: memberToken }),
+      api('/members/me/passbook', { token: memberToken }),
       api('/members/me/referrals', { token: memberToken }),
     ])
-      .then(([me, tx, refs]) => setData({ member: me.member, transactions: tx.transactions, referrals: refs.referrals }))
+      .then(([me, book, refs]) => setData({ member: me.member, passbook: book.entries, referrals: refs.referrals }))
       .catch((err) => {
         if (err.status === 401 || err.status === 404) signOutMember() // login expired or account removed
         else setError(err.message)
@@ -78,7 +77,7 @@ export default function MemberDashboard() {
     )
   }
 
-  const { member, transactions, referrals } = data
+  const { member, passbook, referrals } = data
   const referralLink = `${window.location.origin}/join/member?ref=${member.referralCode}`
   const shareMessage = `Join ALEOS Rewards network as a member and earn points on your purchases! Use my referral code ${member.referralCode} or sign up here: ${referralLink}`
   const merchantLink = `${window.location.origin}/join/merchant`
@@ -251,39 +250,70 @@ Meet ALEOS — India's zero-cost customer growth app for retail shops!
         />
       </div>
 
-      <h3 className="mb-3 text-slate-700">Merchant Points Ledger</h3>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left text-[13px]">
-          <thead>
-            <tr>
-              <th className={thClass}>Date</th>
-              <th className={thClass}>Merchant / Shop Name</th>
-              <th className={`${thClass} text-right`}>Purchased Value</th>
-              <th className={`${thClass} text-right`}>Points Issued</th>
-            </tr>
-          </thead>
-          <tbody>
-            {transactions.length === 0 ? (
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
+          <h3 className="m-0 text-base font-semibold text-slate-800">📒 Points Ledger</h3>
+          <span className="text-xs text-slate-500">
+            Balance <span className="font-bold text-slate-900">{member.totalPoints.toLocaleString('en-IN')} pts</span>
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-left text-[13px]">
+            <thead className="bg-slate-50">
               <tr>
-                <td colSpan={4} className="px-2.5 py-5 text-center text-slate-500">
-                  No points recorded yet. Points are automatically credited when participating merchants log your
-                  purchases.
-                </td>
+                <th className={thClass}>Date</th>
+                <th className={thClass}>Particulars</th>
+                <th className={`${thClass} text-right`}>Credit (+)</th>
+                <th className={`${thClass} text-right`}>Debit (−)</th>
+                <th className={`${thClass} text-right`}>Balance</th>
               </tr>
-            ) : (
-              transactions.map((t) => (
-                <tr key={t._id}>
-                  <td className={`${tdClass} font-semibold text-slate-700`}>{formatDate(t.date)}</td>
-                  <td className={`${tdClass} font-bold text-slate-900`}>{t.shopName}</td>
-                  <td className={`${tdClass} text-right font-semibold`}>₹{t.purchaseAmount.toLocaleString('en-IN')}</td>
-                  <td className={`${tdClass} text-right`}>
-                    <span className={badgePointsClass}>+{t.pointsEarned} pts</span>
+            </thead>
+            <tbody>
+              {passbook.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="px-2.5 py-5 text-center text-slate-500">
+                    No points recorded yet. Points are credited when participating merchants log your purchases.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                passbook.map((e) => (
+                  <tr key={e.id} className="hover:bg-slate-50/70">
+                    <td className={`${tdClass} whitespace-nowrap text-slate-700`}>
+                      {formatDate(e.date)}
+                      <span className="block text-xs text-slate-500">{formatTimeIST(e.date)}</span>
+                    </td>
+                    <td className={tdClass}>
+                      <div className="flex items-start gap-2.5">
+                        <span
+                          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${
+                            e.credit ? 'bg-emerald-50' : 'bg-red-50'
+                          }`}
+                        >
+                          {e.type === 'Referral bonus' ? '🤝' : e.debit ? '🛍️' : '🎁'}
+                        </span>
+                        <div className="min-w-0">
+                          <span className="block font-semibold text-slate-900">{e.shopName}</span>
+                          <span className="text-xs text-slate-500">
+                            {e.type} · {e.details}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={`${tdClass} text-right font-semibold whitespace-nowrap text-emerald-600`}>
+                      {e.credit ? `+${e.credit.toLocaleString('en-IN')}` : ''}
+                    </td>
+                    <td className={`${tdClass} text-right font-semibold whitespace-nowrap text-red-600`}>
+                      {e.debit ? `−${e.debit.toLocaleString('en-IN')}` : ''}
+                    </td>
+                    <td className={`${tdClass} text-right font-bold whitespace-nowrap text-slate-900`}>
+                      {e.balanceAfter.toLocaleString('en-IN')}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
     </Layout>
   )

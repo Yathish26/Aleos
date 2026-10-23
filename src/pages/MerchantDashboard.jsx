@@ -22,6 +22,29 @@ const MIN_RECHARGE = 1000
 const CONVENIENCE_FEE_RATE = 0.03
 const FEE_PERCENT = `${CONVENIENCE_FEE_RATE * 100}%`
 const rupees = (n) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
+
+// Shares of every bill's points — same as the server (it does the real split)
+const MEMBER_SHARE = 0.8
+const REFERRER_SHARE = 0.1
+
+// Icon for each kind of passbook entry (types come from the server)
+const passbookIcons = {
+  'Points given': '🎁',
+  Recharge: '👛',
+  'Sign-up top-up': '👛',
+  Withdrawal: '💸',
+  'Points used by member': '🔁',
+  'Referral share': '🤝',
+  'ALEOS share': '👑',
+}
+
+// Who got the referrer's share of a bill
+const referrerLabel = (t) =>
+  t.referrerMember
+    ? t.referrerMember.name || t.referrerMember.email
+    : t.referrerMerchant
+      ? t.referrerMerchant.businessName
+      : t.referrerCode || ''
 const pts = (n) => `${n.toLocaleString('en-IN')} pts`
 
 export default function MerchantDashboard() {
@@ -68,6 +91,27 @@ export default function MerchantDashboard() {
   const [withdrawError, setWithdrawError] = useState('')
   const [withdrawn, setWithdrawn] = useState(null)
 
+  // Wallet passbook (every point in and out); bump passbookVersion to reload it after anything that moves points
+  const [passbook, setPassbook] = useState(null)
+  const [passbookVersion, setPassbookVersion] = useState(0)
+  const reloadPassbook = () => setPassbookVersion((v) => v + 1)
+  // Which history tab is open: 'passbook' | 'used' | 'recharges' | 'withdrawals'
+  const [historyTab, setHistoryTab] = useState('passbook')
+
+  useEffect(() => {
+    if (!merchantToken) return
+    api('/merchants/me/passbook', { token: merchantToken })
+      .then((res) => {
+        setPassbook(res.entries)
+        // Referral and ALEOS shares can arrive from other shops' bills, so take the latest balance too
+        setData((d) => (d ? { ...d, merchant: { ...d.merchant, walletBalance: res.walletBalance } } : d))
+      })
+      .catch((err) => {
+        if (err.status === 401) signOutMerchant()
+        else setError(err.message)
+      })
+  }, [merchantToken, signOutMerchant, passbookVersion])
+
   useEffect(() => {
     if (!merchantToken) return
     Promise.all([
@@ -109,7 +153,8 @@ export default function MerchantDashboard() {
 
   const { merchant, transactions, payments } = data
   const walletBalance = merchant.walletBalance ?? 0
-  const totalPoints = transactions.reduce((sum, t) => sum + t.pointsEarned, 0)
+  // totalPoints = everything given on the bill (member + referrer + ALEOS); older bills only have pointsEarned
+  const totalPoints = transactions.reduce((sum, t) => sum + (t.totalPoints ?? t.pointsEarned), 0)
   const totalSales = transactions.reduce((sum, t) => sum + t.purchaseAmount, 0)
 
   const mainDiscount = merchant.discountPercent ?? 10
@@ -183,8 +228,11 @@ export default function MerchantDashboard() {
         ...d,
         merchant: { ...d.merchant, walletBalance: res.walletBalance },
         transactions: [res.transaction, ...d.transactions],
+        // A customer added here joins with this merchant's code, so they count as a referral
+        referrals: res.newMember && res.transaction.member ? [res.transaction.member, ...d.referrals] : d.referrals,
       }))
       setIssued({ ...res.transaction, newMember: res.newMember })
+      reloadPassbook()
       setCustomerEmail('')
       setAmount('')
       resetCustomerOtp()
@@ -295,6 +343,7 @@ export default function MerchantDashboard() {
         redemptions: [res.redemption, ...d.redemptions],
       }))
       setRedeemed(res.redemption)
+      reloadPassbook()
       setRedeemCustomer(null)
       setRedeemEmail('')
       setRedeemAmount('')
@@ -338,6 +387,7 @@ export default function MerchantDashboard() {
         withdrawalFeePercent: res.feePercent ?? d.withdrawalFeePercent,
       }))
       setWithdrawn(res.withdrawal)
+      reloadPassbook()
       setWithdrawAmount('')
     } catch (err) {
       if (err.status === 401) signOutMerchant()
@@ -368,6 +418,7 @@ export default function MerchantDashboard() {
         payments: [res.payment, ...d.payments],
       }))
       setRecharged(res.payment)
+      reloadPassbook()
       setRechargeAmount(String(MIN_RECHARGE))
     } catch (err) {
       if (err.status === 401) signOutMerchant()
@@ -561,7 +612,8 @@ export default function MerchantDashboard() {
         <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
           <h4 className="mt-0 mb-2 font-semibold text-slate-700">🎟️ Your Referral Code</h4>
           <p className="mb-3 text-[13px] text-slate-500">
-            Share this with your customers — they can use it to sign up as ALEOS members.
+            Share this with your customers — they can use it to sign up as ALEOS members. New customers you add while
+            giving points also count as your referrals.
           </p>
 
           <div className="mb-3 flex items-stretch gap-2">
@@ -617,16 +669,22 @@ export default function MerchantDashboard() {
       <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
         <h4 className="mt-0 mb-2 font-semibold text-slate-700">🎁 Give Reward Points</h4>
         <p className="mb-3 text-[13px] text-slate-500">
-          Enter the customer’s email and the bill amount. They earn your discount % of the bill as points, taken from
-          your wallet points, and get an email about it. If they aren’t an ALEOS member yet, they get a code by email
-          — enter it here and their account is created for them.
+          Enter the customer’s email and the bill amount. Your discount % of the bill is taken from your wallet as
+          points and shared: {MEMBER_SHARE * 100}% to the customer, {REFERRER_SHARE * 100}% to whoever referred them
+          and the rest to ALEOS. The customer gets an email about it. If they aren’t an ALEOS member yet, they get a
+          code by email — enter it here and their account is created for them.
         </p>
 
         {issueError && <div className={errorBoxClass}>{issueError}</div>}
         {issued && (
           <div className={infoBoxSuccessClass}>
-            ✅ {pts(issued.pointsEarned)} given to {issued.member?.name || issued.member?.email || 'the customer'}
-            {issued.newMember && ' (new member account created)'}. They’ve been emailed. Wallet now has{' '}
+            ✅ {pts(issued.totalPoints ?? issued.pointsEarned)} given: {pts(issued.pointsEarned)} to{' '}
+            {issued.member?.name || issued.member?.email || 'the customer'}
+            {issued.referrerPoints > 0 &&
+              `, ${pts(issued.referrerPoints)} to their referrer ${referrerLabel(issued)}`}
+            , {pts(issued.masterPoints ?? 0)} to ALEOS
+            {issued.newMember && ' (new member account created — counted as your referral)'}. They’ve been emailed.
+            Wallet now has{' '}
             {pts(issued.walletBalanceAfter ?? walletBalance)}.
           </div>
         )}
@@ -674,6 +732,14 @@ export default function MerchantDashboard() {
             <span className="text-slate-600">Applied Discount</span>
             <span className="font-bold text-slate-900">{mainDiscount}%</span>
           </div>
+          {previewPoints > 0 && (
+            <div className="-mt-2 mb-4 rounded-lg bg-white px-3.5 py-2.5 text-xs text-slate-600 ring-1 ring-slate-200">
+              <div className="mb-1 font-semibold text-slate-700">How the {pts(previewPoints)} are shared</div>
+              Customer {pts(Math.floor(previewPoints * MEMBER_SHARE))} ({MEMBER_SHARE * 100}%) · their referrer{' '}
+              {pts(Math.floor(previewPoints * REFERRER_SHARE))} ({REFERRER_SHARE * 100}%) · ALEOS the rest
+              <span className="block text-slate-400">No referrer? ALEOS gets the referrer’s share too.</span>
+            </div>
+          )}
 
           {customerOtpSent && (
             <>
@@ -863,48 +929,104 @@ export default function MerchantDashboard() {
         )}
       </div>
 
-      <h3 className="mb-3 text-slate-700">Points History</h3>
-      <div className="mb-8 overflow-x-auto">
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 pt-4">
+          <h3 className="m-0 pb-3 text-base font-semibold text-slate-800">History</h3>
+          <div className="pb-3 text-xs text-slate-500">
+            Wallet balance <span className="font-bold text-slate-900">{pts(walletBalance)}</span>
+          </div>
+          <div role="tablist" className="-mb-px flex w-full gap-1 overflow-x-auto">
+            {[
+              { id: 'passbook', label: '📒 Passbook', count: passbook?.length },
+              { id: 'used', label: '🔁 Points Used', count: data.redemptions.length },
+              { id: 'recharges', label: '👛 Recharges', count: payments.length },
+              { id: 'withdrawals', label: '💸 Withdrawals', count: withdrawals.length },
+            ].map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                role="tab"
+                aria-selected={historyTab === t.id}
+                onClick={() => setHistoryTab(t.id)}
+                className={`flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors ${
+                  historyTab === t.id
+                    ? 'border-blue-600 text-blue-700'
+                    : 'border-transparent text-slate-500 hover:text-slate-800'
+                }`}
+              >
+                {t.label}
+                {t.count > 0 && (
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
+                      historyTab === t.id ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
+                    }`}
+                  >
+                    {t.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+      {historyTab === 'passbook' && (
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-[13px]">
-          <thead>
+          <thead className="bg-slate-50">
             <tr>
               <th className={thClass}>Date</th>
-              <th className={thClass}>Customer</th>
-              <th className={`${thClass} text-right`}>Purchase Value</th>
-              <th className={`${thClass} text-right`}>Discount</th>
-              <th className={`${thClass} text-right`}>Points Given</th>
-              <th className={`${thClass} text-right`}>Wallet Left</th>
+              <th className={thClass}>Particulars</th>
+              <th className={`${thClass} text-right`}>Credit (+)</th>
+              <th className={`${thClass} text-right`}>Debit (−)</th>
+              <th className={`${thClass} text-right`}>Balance</th>
             </tr>
           </thead>
           <tbody>
-            {transactions.length === 0 ? (
+            {passbook === null ? (
               <tr>
-                <td colSpan={6} className="px-2.5 py-5 text-center text-slate-500">
-                  No points given yet. Use the form above when a member shops with you.
+                <td colSpan={5} className="px-2.5 py-5 text-center text-slate-500">
+                  Loading…
+                </td>
+              </tr>
+            ) : passbook.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-2.5 py-5 text-center text-slate-500">
+                  No wallet activity yet.
                 </td>
               </tr>
             ) : (
-              transactions.map((t) => (
-                <tr key={t._id}>
-                  <td className={`${tdClass} font-semibold text-slate-700`}>{formatDate(t.date)}</td>
+              passbook.map((e) => (
+                <tr key={e.id} className="hover:bg-slate-50/70">
+                  <td className={`${tdClass} whitespace-nowrap text-slate-700`}>
+                    {formatDate(e.date)}
+                    <span className="block text-xs text-slate-500">{formatTimeIST(e.date)}</span>
+                  </td>
                   <td className={tdClass}>
-                    <span className="block font-bold text-slate-900">
-                      {t.member ? t.member.name || t.member.email : 'Removed member'}
-                    </span>
-                    {t.member?.name && t.member.email && <span className="text-xs text-slate-500">{t.member.email}</span>}
+                    <div className="flex items-start gap-2.5">
+                      <span
+                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${
+                          e.credit ? 'bg-emerald-50' : 'bg-red-50'
+                        }`}
+                      >
+                        {passbookIcons[e.type] || '•'}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="block font-semibold text-slate-900">{e.type}</span>
+                        <span className="text-xs text-slate-500">
+                          {e.details}
+                          {e.reference && ` · Ref ${e.reference}`}
+                        </span>
+                      </div>
+                    </div>
                   </td>
-                  <td className={`${tdClass} text-right font-semibold`}>{rupees(t.purchaseAmount)}</td>
-                  <td className={`${tdClass} text-right text-slate-600`}>
-                    {t.discountPercent != null ? `${t.discountPercent}%` : '—'}
+                  <td className={`${tdClass} text-right font-semibold whitespace-nowrap text-emerald-600`}>
+                    {e.credit ? `+${e.credit.toLocaleString('en-IN')}` : ''}
                   </td>
-                  <td className={`${tdClass} text-right`}>
-                    <span className={badgePointsClass}>+{t.pointsEarned} pts</span>
-                    {t.walletDebit != null && (
-                      <span className="mt-1 block text-xs font-semibold text-red-600">−{pts(t.walletDebit)} wallet</span>
-                    )}
+                  <td className={`${tdClass} text-right font-semibold whitespace-nowrap text-red-600`}>
+                    {e.debit ? `−${e.debit.toLocaleString('en-IN')}` : ''}
                   </td>
-                  <td className={`${tdClass} text-right text-slate-600`}>
-                    {t.walletBalanceAfter != null ? pts(t.walletBalanceAfter) : '—'}
+                  <td className={`${tdClass} text-right font-bold whitespace-nowrap text-slate-900`}>
+                    {e.balanceAfter.toLocaleString('en-IN')}
                   </td>
                 </tr>
               ))
@@ -912,11 +1034,12 @@ export default function MerchantDashboard() {
           </tbody>
         </table>
       </div>
+      )}
 
-      <h3 className="mb-3 text-slate-700">Points Used by Members</h3>
-      <div className="mb-8 overflow-x-auto">
+      {historyTab === 'used' && (
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-[13px]">
-          <thead>
+          <thead className="bg-slate-50">
             <tr>
               <th className={thClass}>Date</th>
               <th className={thClass}>Member</th>
@@ -956,11 +1079,12 @@ export default function MerchantDashboard() {
           </tbody>
         </table>
       </div>
+      )}
 
-      <h3 className="mb-3 text-slate-700">Recharge History</h3>
+      {historyTab === 'recharges' && (
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-[13px]">
-          <thead>
+          <thead className="bg-slate-50">
             <tr>
               <th className={thClass}>Date</th>
               <th className={thClass}>Type</th>
@@ -1002,11 +1126,12 @@ export default function MerchantDashboard() {
           </tbody>
         </table>
       </div>
+      )}
 
-      <h3 className="mt-8 mb-3 text-slate-700">Withdrawal History</h3>
+      {historyTab === 'withdrawals' && (
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-[13px]">
-          <thead>
+          <thead className="bg-slate-50">
             <tr>
               <th className={thClass}>Date</th>
               <th className={thClass}>Sent To</th>
@@ -1052,6 +1177,8 @@ export default function MerchantDashboard() {
             )}
           </tbody>
         </table>
+      </div>
+      )}
       </div>
     </Layout>
   )

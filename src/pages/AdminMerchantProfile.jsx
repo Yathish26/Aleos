@@ -131,12 +131,17 @@ export default function AdminMerchantProfile() {
           </div>
         </div>
         <div className="flex gap-1.5">
-          {m.status !== 'approved' && (
+          {m.isMaster && (
+            <span className="rounded-md bg-indigo-100 px-2 py-1 text-xs font-bold uppercase text-indigo-700">
+              👑 Master Merchant
+            </span>
+          )}
+          {!m.isMaster && m.status !== 'approved' && (
             <button className={`${btnSuccess} px-3 py-1.5 text-xs`} disabled={busy} onClick={() => setStatus('approved')}>
               Approve
             </button>
           )}
-          {m.status !== 'rejected' && (
+          {!m.isMaster && m.status !== 'rejected' && (
             <button
               className={`${btnBase} bg-red-100 px-3 py-1.5 text-xs text-red-700`}
               disabled={busy}
@@ -266,7 +271,13 @@ export default function AdminMerchantProfile() {
                       {t.discountPercent != null && <span className="block text-xs text-slate-500">at {t.discountPercent}%</span>}
                     </td>
                     <td className={`${tdClass} text-right`}>
-                      <span className={badgePointsClass}>+{pts(t.pointsEarned)}</span>
+                      <span className={badgePointsClass}>+{pts(t.totalPoints ?? t.pointsEarned)}</span>
+                      {t.totalPoints != null && (
+                        <span className="mt-1 block text-xs text-slate-500">
+                          Member {t.pointsEarned}
+                          {t.referrerPoints > 0 && ` · Referrer ${t.referrerPoints}`} · ALEOS {t.masterPoints ?? 0}
+                        </span>
+                      )}
                     </td>
                   </tr>
                 ))

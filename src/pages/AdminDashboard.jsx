@@ -39,7 +39,7 @@ function StatTile({ label, value, tone = 'slate' }) {
 
 export default function AdminDashboard() {
   const navigate = useNavigate()
-  const { adminToken, signOutAdmin } = useAuth()
+  const { adminToken, signOutAdmin, signInMerchant } = useAuth()
 
   const [tab, setTab] = useState('merchants')
   const [stats, setStats] = useState(null)
@@ -54,6 +54,9 @@ export default function AdminDashboard() {
   const [feeDraft, setFeeDraft] = useState('')
   const [savingSettings, setSavingSettings] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
+  // The company's ALEOS merchant account: { merchant, summary }
+  const [master, setMaster] = useState(null)
+  const [openingMaster, setOpeningMaster] = useState(false)
 
   // Runs an admin API call; logs out if the login has expired
   const adminApi = useCallback(
@@ -75,6 +78,13 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (adminToken) loadStats()
   }, [adminToken, loadStats])
+
+  useEffect(() => {
+    if (!adminToken || tab !== 'master') return
+    adminApi('/admin/master-merchant')
+      .then(setMaster)
+      .catch((err) => setError(err.message))
+  }, [adminToken, adminApi, tab])
 
   useEffect(() => {
     if (!adminToken) return
@@ -126,6 +136,20 @@ export default function AdminDashboard() {
       setError(err.message)
     } finally {
       setBusyId(null)
+    }
+  }
+
+  // Logs this browser in as the ALEOS master merchant and opens the normal merchant dashboard for it
+  async function openMasterDashboard() {
+    setError('')
+    setOpeningMaster(true)
+    try {
+      const { token } = await adminApi('/admin/master-merchant/session', { method: 'POST' })
+      signInMerchant(token)
+      navigate('/merchant/dashboard')
+    } catch (err) {
+      setError(err.message)
+      setOpeningMaster(false)
     }
   }
 
@@ -188,6 +212,9 @@ export default function AdminDashboard() {
         <button className={tabClass(tab === 'members')} onClick={() => setTab('members')}>
           Members
         </button>
+        <button className={tabClass(tab === 'master')} onClick={() => setTab('master')}>
+          Master Merchant
+        </button>
         <button className={tabClass(tab === 'settings')} onClick={() => setTab('settings')}>
           Settings
         </button>
@@ -237,7 +264,14 @@ export default function AdminDashboard() {
                   merchants.map((m) => (
                     <tr key={m._id}>
                       <td className={tdClass}>
-                        <span className="block font-bold text-slate-900">{m.businessName}</span>
+                        <span className="block font-bold text-slate-900">
+                          {m.businessName}
+                          {m.isMaster && (
+                            <span className="ml-1.5 rounded-md bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-indigo-700">
+                              Master
+                            </span>
+                          )}
+                        </span>
                         {m.merchantId && (
                           <span className="block font-mono text-xs font-bold tracking-wider text-indigo-600">
                             {m.merchantId}
@@ -269,7 +303,8 @@ export default function AdminDashboard() {
                         </span>
                       </td>
                       <td className={`${tdClass} text-right whitespace-nowrap`}>
-                        {m.status !== 'approved' && (
+                        {m.isMaster && <span className="text-xs text-slate-400">Always approved</span>}
+                        {!m.isMaster && m.status !== 'approved' && (
                           <button
                             className={`${btnSuccess} px-2.5 py-1 text-xs`}
                             disabled={busyId === m._id}
@@ -278,7 +313,7 @@ export default function AdminDashboard() {
                             Approve
                           </button>
                         )}
-                        {m.status !== 'rejected' && (
+                        {!m.isMaster && m.status !== 'rejected' && (
                           <button
                             className={`${btnBase} ml-1.5 bg-red-100 px-2.5 py-1 text-xs text-red-700`}
                             disabled={busyId === m._id}
@@ -355,6 +390,43 @@ export default function AdminDashboard() {
             </table>
           </div>
         </>
+      ) : tab === 'master' ? (
+        <div className="max-w-2xl rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+          <h4 className="mt-0 mb-1 font-semibold text-slate-700">👑 ALEOS Master Merchant</h4>
+          <p className="mt-0 mb-4 text-[13px] text-slate-500">
+            The company’s own merchant account. Use it like any merchant — give points to members, recharge its wallet,
+            set its discount and share its referral code. Members who join with code{' '}
+            <span className="font-mono font-bold">ALEOS</span> count as its referrals.
+          </p>
+          {!master ? (
+            <p className="text-sm text-slate-500">Loading…</p>
+          ) : (
+            <>
+              <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <StatTile label="Merchant ID" value={master.merchant.merchantId} />
+                <StatTile label="Wallet" value={`${(master.merchant.walletBalance ?? 0).toLocaleString('en-IN')} pts`} tone="green" />
+                <StatTile label="Points Given" value={`${master.summary.pointsGiven.toLocaleString('en-IN')} pts`} />
+                <StatTile label="Referrals" value={master.summary.referrals} />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className={`${btnBase} bg-indigo-600 text-white`}
+                  disabled={openingMaster}
+                  onClick={openMasterDashboard}
+                >
+                  {openingMaster ? 'Opening…' : 'Open Master Merchant Dashboard →'}
+                </button>
+                <Link
+                  to={`/admin/merchants/${master.merchant._id}`}
+                  className={`${btnBase} bg-white text-indigo-700 ring-1 ring-indigo-200`}
+                >
+                  View Profile
+                </Link>
+              </div>
+            </>
+          )}
+        </div>
       ) : (
         <div className="max-w-lg rounded-xl border border-slate-200 bg-slate-50 p-4">
           <h4 className="mt-0 mb-1 font-semibold text-slate-700">💸 Merchant Withdrawal Fee</h4>
