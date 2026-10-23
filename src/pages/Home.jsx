@@ -67,6 +67,13 @@ const iconPaths = {
   ),
   check: <path d="M20 6 9 17l-5-5" />,
   chevronDown: <path d="m6 9 6 6 6-6" />,
+  arrowRight: <path d="M5 12h14M12 5l7 7-7 7" />,
+  trending: (
+    <>
+      <path d="m22 7-8.5 8.5-5-5L2 17" />
+      <path d="M16 7h6v6" />
+    </>
+  ),
 }
 
 function Icon({ name, className = 'h-6 w-6', strokeWidth = 2 }) {
@@ -102,10 +109,19 @@ const joinOptions = [
   },
 ]
 
+const pillars = ['All', 'Live', 'Events', 'Offers', 'Services']
+
 const steps = [
   { icon: 'userPlus', title: 'Join in a minute', text: 'Sign up with your email and a referral code from a friend.' },
   { icon: 'bag', title: 'Shop at partners', text: 'Buy from any participating merchant near you.' },
   { icon: 'gift', title: 'Collect points', text: 'Points land in your account automatically with every purchase.' },
+]
+
+// How every bill's points are shared
+const split = [
+  { value: '80%', label: 'goes to you', text: 'of the points on every bill', tone: 'text-brand-cyan' },
+  { value: '10%', label: 'to your referrer', text: 'the friend or shop that invited you', tone: 'text-brand-blue' },
+  { value: '₹0', label: 'to join', text: 'free for members, always', tone: 'text-white' },
 ]
 
 const benefits = [
@@ -122,6 +138,7 @@ const benefits = [
     title: 'Get paid when friends shop',
     text: 'When you invite friends, you earn a % bonus on their purchases!',
   },
+  { icon: 'trending', title: 'Grow with your city', text: 'More shops join every week — more places to earn and spend.' },
 ]
 
 const memberPerks = [
@@ -133,6 +150,13 @@ const merchantPerks = [
   'Reach new customers in your area',
   'Reward loyal shoppers so they come back',
   'Pick your category and apply in minutes',
+]
+
+// Example activity shown on the hero card (illustration only)
+const sampleActivity = [
+  { emoji: '☕', shop: 'Artisan Cafe', note: '₹1,000 bill', points: '+80' },
+  { emoji: '💇', shop: 'Glow Salon', note: '₹600 bill', points: '+48' },
+  { emoji: '🤝', shop: 'Referral bonus', note: 'A friend shopped', points: '+10' },
 ]
 
 function JoinDropdown() {
@@ -160,12 +184,12 @@ function JoinDropdown() {
     <div ref={menuRef} className="relative w-full sm:w-auto">
       <button
         type="button"
-        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-8 py-3.5 text-base font-bold text-blue-700 shadow-lg shadow-blue-900/20 transition hover:bg-blue-50 sm:w-auto"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-cyan px-8 py-3.5 text-base font-bold text-brand-navy shadow-lg shadow-brand-cyan/30 transition hover:bg-white sm:w-auto"
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
       >
-        Join us
+        Join us — it's free
         <Icon name="chevronDown" className={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`} strokeWidth={2.5} />
       </button>
 
@@ -179,13 +203,13 @@ function JoinDropdown() {
               key={option.to}
               to={option.to}
               role="menuitem"
-              className="flex items-start gap-3 border-b border-slate-100 p-4 last:border-b-0 hover:bg-slate-50"
+              className="flex items-start gap-3 border-b border-slate-100 p-4 last:border-b-0 hover:bg-brand-light"
             >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-brand-light text-brand-blue">
                 <Icon name={option.icon} className="h-5 w-5" />
               </span>
               <span>
-                <span className="block font-bold text-slate-900">{option.title}</span>
+                <span className="block font-bold text-brand-navy">{option.title}</span>
                 <span className="block text-[13px] leading-relaxed text-slate-500">{option.description}</span>
               </span>
             </Link>
@@ -196,16 +220,64 @@ function JoinDropdown() {
   )
 }
 
-function PerkList({ items }) {
+function PerkList({ items, dark = false }) {
   return (
-    <ul className="m-0 mb-6 list-none space-y-2.5 p-0">
+    <ul className="m-0 mb-7 list-none space-y-3 p-0">
       {items.map((item) => (
-        <li key={item} className="flex items-start gap-2.5 text-[15px] text-slate-600">
-          <Icon name="check" className="mt-0.5 h-5 w-5 shrink-0 text-emerald-500" strokeWidth={2.5} />
+        <li key={item} className={`flex items-start gap-2.5 text-[15px] ${dark ? 'text-blue-100' : 'text-slate-600'}`}>
+          <span
+            className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+              dark ? 'bg-brand-cyan/20 text-brand-cyan' : 'bg-brand-light text-brand-blue'
+            }`}
+          >
+            <Icon name="check" className="h-3.5 w-3.5" strokeWidth={3} />
+          </span>
           {item}
         </li>
       ))}
     </ul>
+  )
+}
+
+function SectionHeading({ eyebrow, title, text }) {
+  return (
+    <div className="mx-auto mb-12 max-w-2xl text-center">
+      <div className="mb-3 text-xs font-bold tracking-[0.2em] text-brand-blue uppercase">{eyebrow}</div>
+      <h2 className="m-0 text-3xl font-extrabold tracking-tight text-brand-navy sm:text-4xl">{title}</h2>
+      {text && <p className="mt-4 mb-0 text-base leading-relaxed text-slate-500">{text}</p>}
+    </div>
+  )
+}
+
+// Decorative preview of a member's points (not real data)
+function HeroCard() {
+  return (
+    <div className="relative mx-auto w-full max-w-sm" aria-hidden="true">
+      <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-brand-cyan/40 to-brand-blue/40 blur-2xl" />
+      <div className="relative rounded-3xl border border-white/15 bg-white/10 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <div className="text-xs font-semibold tracking-wide text-blue-100/80 uppercase">Your points</div>
+            <div className="font-display text-4xl font-extrabold text-white">1,250</div>
+          </div>
+          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-cyan text-brand-navy">
+            <Icon name="gift" className="h-6 w-6" />
+          </span>
+        </div>
+        <div className="space-y-2.5">
+          {sampleActivity.map((a) => (
+            <div key={a.shop} className="flex items-center gap-3 rounded-2xl bg-white/95 px-3.5 py-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-lg">{a.emoji}</span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-bold text-brand-navy">{a.shop}</div>
+                <div className="text-xs text-slate-500">{a.note}</div>
+              </div>
+              <span className="text-sm font-extrabold text-emerald-600">{a.points}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }
 
@@ -221,47 +293,89 @@ export default function Home() {
   return (
     <Layout bare>
       {/* Hero */}
-      <section className="bg-linear-to-br from-blue-600 via-blue-700 to-indigo-800 text-white">
-        <div className={`${containerClass} py-16 sm:py-24 lg:py-28`}>
-          <div className="max-w-2xl">
-            <span className="mb-5 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide">
-              <Icon name="gift" className="h-3.5 w-3.5" />
-              ALEOS Rewards Network
-            </span>
-            <h1 className="m-0 text-4xl leading-tight font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-              Shop local. <br className="hidden sm:block" />
-              Earn rewards.
+      <section className="relative overflow-hidden bg-brand-navy text-white">
+        {/* Soft brand glows */}
+        <div className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-brand-blue/40 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-brand-cyan/25 blur-3xl" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_0)] bg-size-[24px_24px]" />
+
+        <div className={`${containerClass} relative grid items-center gap-12 py-16 sm:py-20 lg:grid-cols-2 lg:py-28`}>
+          <div>
+            <div className="mb-6 inline-flex flex-wrap items-center gap-x-2 gap-y-1 rounded-full border border-white/15 bg-white/10 px-4 py-1.5 text-[11px] font-semibold tracking-[0.15em] text-blue-100 uppercase sm:text-xs">
+              {pillars.map((p, i) => (
+                <span key={p} className="flex items-center gap-2">
+                  {i > 0 && <span className="text-brand-cyan">|</span>}
+                  {p}
+                </span>
+              ))}
+            </div>
+
+            <h1 className="m-0 text-4xl leading-[1.1] font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
+              Shop local.
+              <br />
+              <span className="bg-linear-to-r from-brand-cyan to-brand-blue bg-clip-text text-transparent">
+                Earn rewards.
+              </span>
             </h1>
-            <p className="mt-5 mb-9 max-w-xl text-base leading-relaxed text-blue-100 sm:text-lg">
+            <p className="mt-6 mb-9 max-w-xl text-base leading-relaxed text-blue-100/90 sm:text-lg">
               A rewards network connecting shoppers and local businesses. Members earn points on every purchase, and
               merchants grow with loyal customers.
             </p>
 
             <div className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-center">
               <JoinDropdown />
-              <Link to="/login" className="text-center text-sm font-semibold text-blue-100 hover:text-white">
-                Already a member? Log in →
+              <Link
+                to="/login"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/20 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                Member login
+                <Icon name="arrowRight" className="h-4 w-4" />
               </Link>
             </div>
+
+            <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm text-blue-100/80">
+              {['Free to join', 'Points on every bill', 'Works at local shops'].map((t) => (
+                <span key={t} className="flex items-center gap-1.5">
+                  <Icon name="check" className="h-4 w-4 text-brand-cyan" strokeWidth={3} />
+                  {t}
+                </span>
+              ))}
+            </div>
           </div>
+
+          <HeroCard />
+        </div>
+      </section>
+
+      {/* How the points are shared */}
+      <section className="relative z-10 -mt-10 px-4 sm:-mt-12">
+        <div className="mx-auto grid max-w-5xl gap-px overflow-hidden rounded-3xl bg-white/10 shadow-xl shadow-brand-navy/20 sm:grid-cols-3">
+          {split.map((s) => (
+            <div key={s.label} className="bg-linear-to-br from-brand-navy to-[#123f8a] px-6 py-6 text-center sm:py-7">
+              <div className={`font-display text-3xl font-extrabold sm:text-4xl ${s.tone}`}>{s.value}</div>
+              <div className="mt-1 font-semibold text-white">{s.label}</div>
+              <div className="mt-0.5 text-[13px] text-blue-100/70">{s.text}</div>
+            </div>
+          ))}
         </div>
       </section>
 
       {/* How it works */}
-      <section className={`${containerClass} py-16 sm:py-20`}>
-        <h2 className="m-0 text-center text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
-          How it works
-        </h2>
-        <p className="mt-3 mb-12 text-center text-slate-500">Three simple steps to start earning.</p>
+      <section className={`${containerClass} py-20 sm:py-24`}>
+        <SectionHeading eyebrow="How it works" title="Three simple steps to start earning" />
 
-        <div className="grid gap-10 sm:grid-cols-3 sm:gap-8">
+        <div className="relative grid gap-6 sm:grid-cols-3">
+          {/* Connecting line behind the step numbers */}
+          <div className="absolute top-7 right-[16%] left-[16%] hidden h-0.5 bg-linear-to-r from-brand-cyan via-brand-blue to-brand-navy sm:block" />
           {steps.map((step, i) => (
-            <div key={step.title} className="text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-50 text-blue-600">
-                <Icon name={step.icon} className="h-7 w-7" />
+            <div key={step.title} className="relative rounded-3xl border border-slate-100 bg-white p-6 text-center shadow-sm">
+              <div className="relative mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-navy text-brand-cyan shadow-lg shadow-brand-navy/25">
+                <Icon name={step.icon} className="h-6 w-6" />
+                <span className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-brand-cyan text-xs font-extrabold text-brand-navy ring-4 ring-white">
+                  {i + 1}
+                </span>
               </div>
-              <div className="mb-1 text-xs font-bold tracking-widest text-blue-600 uppercase">Step {i + 1}</div>
-              <h3 className="m-0 mb-2 text-lg font-bold text-slate-900">{step.title}</h3>
+              <h3 className="m-0 mb-2 text-lg font-bold text-brand-navy">{step.title}</h3>
               <p className="m-0 text-[15px] leading-relaxed text-slate-500">{step.text}</p>
             </div>
           ))}
@@ -269,22 +383,24 @@ export default function Home() {
       </section>
 
       {/* Why ALEOS */}
-      <section className="border-t border-slate-100">
-        <div className={`${containerClass} py-16 sm:py-20`}>
-          <h2 className="m-0 text-center text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
-            Why people love ALEOS
-          </h2>
-          <p className="mt-3 mb-12 text-center text-slate-500">
-            A local rewards app that pays you every time you shop at neighborhood stores.
-          </p>
+      <section className="bg-brand-light/60">
+        <div className={`${containerClass} py-20 sm:py-24`}>
+          <SectionHeading
+            eyebrow="Why ALEOS"
+            title="Why people love ALEOS"
+            text="A local rewards app that pays you every time you shop at neighbourhood stores."
+          />
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {benefits.map((benefit) => (
-              <div key={benefit.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+              <div
+                key={benefit.title}
+                className="group rounded-3xl border border-white bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-blue/10"
+              >
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-light text-brand-blue transition-colors group-hover:bg-brand-navy group-hover:text-brand-cyan">
                   <Icon name={benefit.icon} />
                 </div>
-                <h3 className="m-0 mb-2 text-lg font-bold text-slate-900">{benefit.title}</h3>
+                <h3 className="m-0 mb-2 text-lg font-bold text-brand-navy">{benefit.title}</h3>
                 <p className="m-0 text-[15px] leading-relaxed text-slate-500">{benefit.text}</p>
               </div>
             ))}
@@ -293,40 +409,82 @@ export default function Home() {
       </section>
 
       {/* Members & merchants */}
-      <section className="bg-slate-50">
-        <div className={`${containerClass} grid gap-14 py-16 sm:py-20 md:grid-cols-2 md:gap-16`}>
-          <div>
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+      <section className={`${containerClass} py-20 sm:py-24`}>
+        <SectionHeading eyebrow="Join the network" title="Built for shoppers and shops" />
+
+        <div className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-3xl border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
+            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-light text-brand-blue">
               <Icon name="user" className="h-7 w-7" />
             </div>
-            <h2 className="m-0 mb-3 text-2xl font-extrabold tracking-tight text-slate-900">For members</h2>
-            <p className="mt-0 mb-5 leading-relaxed text-slate-500">
+            <h3 className="m-0 mb-2 text-2xl font-extrabold tracking-tight text-brand-navy">For members</h3>
+            <p className="mt-0 mb-6 leading-relaxed text-slate-500">
               Get rewarded for shopping at the places you already love.
             </p>
             <PerkList items={memberPerks} />
             <Link
               to="/join/member"
-              className="inline-flex rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:opacity-90"
+              className="inline-flex items-center gap-2 rounded-xl bg-brand-navy px-6 py-3 text-sm font-semibold text-white transition-colors hover:bg-brand-blue"
             >
               Join as Member
+              <Icon name="arrowRight" className="h-4 w-4" />
             </Link>
           </div>
 
-          <div className="border-t border-slate-200 pt-14 md:border-t-0 md:border-l md:pt-0 md:pl-16">
-            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-200 text-slate-900">
-              <Icon name="store" className="h-7 w-7" />
+          <div className="relative overflow-hidden rounded-3xl bg-brand-navy p-7 text-white shadow-xl shadow-brand-navy/20 sm:p-9">
+            <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-brand-cyan/20 blur-3xl" />
+            <div className="relative">
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-white/10 text-brand-cyan">
+                <Icon name="store" className="h-7 w-7" />
+              </div>
+              <h3 className="m-0 mb-2 text-2xl font-extrabold tracking-tight">For merchants</h3>
+              <p className="mt-0 mb-6 leading-relaxed text-blue-100/80">
+                Are you a merchant? Join the network and turn shoppers into regulars.
+              </p>
+              <PerkList items={merchantPerks} dark />
+              <div className="flex flex-wrap items-center gap-4">
+                <Link
+                  to="/join/merchant"
+                  className="inline-flex items-center gap-2 rounded-xl bg-brand-cyan px-6 py-3 text-sm font-bold text-brand-navy transition-colors hover:bg-white"
+                >
+                  Join as Merchant
+                  <Icon name="arrowRight" className="h-4 w-4" />
+                </Link>
+                <Link to="/merchant/login" className="text-sm font-semibold text-blue-100 hover:text-white">
+                  Merchant login →
+                </Link>
+              </div>
             </div>
-            <h2 className="m-0 mb-3 text-2xl font-extrabold tracking-tight text-slate-900">For merchants</h2>
-            <p className="mt-0 mb-5 leading-relaxed text-slate-500">
-              Are you a merchant? Join the network and turn shoppers into regulars.
+          </div>
+        </div>
+      </section>
+
+      {/* Closing call to action */}
+      <section className="px-4 pb-20 sm:pb-24">
+        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-linear-to-r from-brand-navy via-[#123f8a] to-brand-blue px-6 py-12 text-center text-white sm:px-12 sm:py-16">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-size-[22px_22px]" />
+          <div className="relative">
+            <h2 className="m-0 text-2xl font-extrabold tracking-tight sm:text-4xl">
+              More than a website — it's a world of opportunities.
+            </h2>
+            <p className="mx-auto mt-4 mb-8 max-w-xl text-blue-100/90">
+              Join the shoppers and local businesses growing together on ALEOS.
             </p>
-            <PerkList items={merchantPerks} />
-            <Link
-              to="/join/merchant"
-              className="inline-flex rounded-lg bg-slate-900 px-5 py-3 text-sm font-semibold text-white hover:opacity-90"
-            >
-              Join as Merchant
-            </Link>
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
+              <Link
+                to="/join/member"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-cyan px-7 py-3.5 text-sm font-bold text-brand-navy transition-colors hover:bg-white"
+              >
+                Start earning
+                <Icon name="arrowRight" className="h-4 w-4" />
+              </Link>
+              <Link
+                to="/join/merchant"
+                className="inline-flex items-center justify-center rounded-xl border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              >
+                List your business
+              </Link>
+            </div>
           </div>
         </div>
       </section>

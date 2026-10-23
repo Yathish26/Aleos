@@ -1,0 +1,10 @@
+# ALEOS — https://www.aleos.co.in
+User-agent: *
+Allow: /
+
+# Private areas: dashboards and admin
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /merchant/dashboard
+
+Sitemap: https://www.aleos.co.in/sitemap.xml

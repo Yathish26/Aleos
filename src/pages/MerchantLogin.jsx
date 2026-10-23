@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import Icon, { inlineIconClass } from '../components/Icon'
 import Layout from '../components/Layout'
 import { btnPrimary, btnSecondary, errorBoxClass, infoBoxClass, inputClass, labelClass } from '../components/ui'
 import { useAuth } from '../store/auth'
@@ -66,7 +67,10 @@ export default function MerchantLogin() {
   return (
     <Layout>
       <h2 className="mt-0 mb-4 text-xl font-semibold text-slate-900">Merchant Login</h2>
-      <div className={infoBoxClass}>🏪 Enter your business email. Only approved merchants can log in.</div>
+      <div className={infoBoxClass}>
+        <Icon name="store" className={inlineIconClass} />
+        Enter your business email. Only approved merchants can log in.
+      </div>
 
       {error && <div className={errorBoxClass}>{error}</div>}
 
@@ -101,7 +105,7 @@ export default function MerchantLogin() {
             </button>
           )}
         </div>
-        <div className="mb-3 mt-1 text-xs font-semibold text-blue-600">{otpMessage}</div>
+        <div className="mb-3 mt-1 text-xs font-semibold text-brand-blue">{otpMessage}</div>
 
         {otpSent && (
           <>
@@ -121,7 +125,7 @@ export default function MerchantLogin() {
               Didn't get it?{' '}
               <button
                 type="button"
-                className="font-semibold text-blue-600 disabled:text-slate-400"
+                className="font-semibold text-brand-blue disabled:text-slate-400"
                 disabled={resendIn > 0 || sending}
                 onClick={sendOtp}
               >
@@ -138,7 +142,7 @@ export default function MerchantLogin() {
 
       <p className="mt-4 mb-0 text-center text-xs text-slate-500">
         Not a merchant yet?{' '}
-        <Link to="/join/merchant" className="font-semibold text-blue-600">
+        <Link to="/join/merchant" className="font-semibold text-brand-blue">
           Apply now
         </Link>
       </p>

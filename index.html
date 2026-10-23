@@ -1,13 +1,83 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-IN">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/aleos.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ALEOS Rewards Network</title>
+    <meta name="theme-color" content="#0B2E67" />
+
+    <!-- Default SEO; src/components/Seo.jsx updates title, description, canonical and robots on each page -->
+    <title>ALEOS Rewards – Shop Local, Earn Reward Points | aleos.co.in</title>
+    <meta
+      name="description"
+      content="ALEOS is India's local rewards network. Earn reward points every time you shop at partner cafes, salons, grocery and retail stores near you — and help local businesses grow with loyal customers."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://www.aleos.co.in/" />
+
+    <link rel="icon" type="image/png" href="/aleos.png" />
+    <link rel="apple-touch-icon" href="/aleos.png" />
+
+    <!-- Link previews (WhatsApp, Facebook, LinkedIn, X) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ALEOS" />
+    <meta property="og:locale" content="en_IN" />
+    <meta property="og:title" content="ALEOS Rewards – Shop Local, Earn Reward Points" />
+    <meta
+      property="og:description"
+      content="Earn reward points at local shops near you. All | Live | Events | Offers | Services."
+    />
+    <meta property="og:url" content="https://www.aleos.co.in/" />
+    <meta property="og:image" content="https://www.aleos.co.in/aleos.png" />
+    <meta property="og:image:alt" content="ALEOS logo" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="ALEOS Rewards – Shop Local, Earn Reward Points" />
+    <meta name="twitter:description" content="Earn reward points at local shops near you." />
+    <meta name="twitter:image" content="https://www.aleos.co.in/aleos.png" />
+
+    <!-- Structured data so search engines know who ALEOS is -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://www.aleos.co.in/#organization",
+            "name": "ALEOS",
+            "url": "https://www.aleos.co.in/",
+            "logo": "https://www.aleos.co.in/aleos.png",
+            "slogan": "All | Live | Events | Offers | Services",
+            "areaServed": "IN"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://www.aleos.co.in/#website",
+            "name": "ALEOS Rewards",
+            "url": "https://www.aleos.co.in/",
+            "inLanguage": "en-IN",
+            "publisher": { "@id": "https://www.aleos.co.in/#organization" }
+          }
+        ]
+      }
+    </script>
+
+    <!-- Brand fonts: Montserrat (headings), Open Sans (body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Open+Sans:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="root"></div>
+    <!-- Shown to crawlers and browsers without JavaScript -->
+    <noscript>
+      <h1>ALEOS Rewards – Shop local, earn rewards</h1>
+      <p>
+        ALEOS is a local rewards network. Members earn reward points on every purchase at partner shops, and merchants
+        grow with loyal customers. Please enable JavaScript to use the site.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

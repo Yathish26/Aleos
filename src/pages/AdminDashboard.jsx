@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { api, formatDate, formatTimeIST } from '../api'
+import Icon, { inlineIconClass } from '../components/Icon'
 import Layout from '../components/Layout'
+import Pagination from '../components/Pagination'
+import PanelTitle from '../components/PanelTitle'
 import {
   badgePointsClass,
   btnBase,
@@ -22,10 +25,11 @@ const statusBadge = {
 }
 
 const merchantFilters = ['approved', 'pending', 'rejected', 'all']
+const PAGE_SIZE = 20
 
 function StatTile({ label, value, tone = 'slate' }) {
   const tones = {
-    slate: 'border-slate-200 bg-slate-50 text-blue-600',
+    slate: 'border-slate-200 bg-slate-50 text-brand-blue',
     green: 'border-green-200 bg-green-50 text-green-700',
     amber: 'border-amber-200 bg-amber-50 text-amber-700',
   }
@@ -57,6 +61,15 @@ export default function AdminDashboard() {
   // The company's ALEOS merchant account: { merchant, summary }
   const [master, setMaster] = useState(null)
   const [openingMaster, setOpeningMaster] = useState(false)
+  // Both lists load one page at a time: { page, totalPages, total, limit } from the server
+  const [merchantSearch, setMerchantSearch] = useState('')
+  const [merchantPage, setMerchantPage] = useState(1)
+  const [merchantPaging, setMerchantPaging] = useState(null)
+  const [merchantsVersion, setMerchantsVersion] = useState(0) // bump to reload the current page
+  const [loadingMerchants, setLoadingMerchants] = useState(false)
+  const [memberPage, setMemberPage] = useState(1)
+  const [memberPaging, setMemberPaging] = useState(null)
+  const [loadingMembers, setLoadingMembers] = useState(false)
 
   // Runs an admin API call; logs out if the login has expired
   const adminApi = useCallback(
@@ -98,23 +111,53 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!adminToken) return
-    const query = merchantFilter === 'all' ? '' : `?status=${merchantFilter}`
-    adminApi(`/admin/merchants${query}`)
-      .then((d) => setMerchants(d.merchants))
-      .catch((err) => setError(err.message))
-  }, [adminToken, adminApi, merchantFilter])
+    let cancelled = false // ignore a slow answer for a page, filter or search the admin has already left
+    // Small delay so we don't search on every keystroke
+    const timer = setTimeout(() => {
+      const status = merchantFilter === 'all' ? '' : `&status=${merchantFilter}`
+      const query = merchantSearch.trim() ? `&search=${encodeURIComponent(merchantSearch.trim())}` : ''
+      setLoadingMerchants(true)
+      adminApi(`/admin/merchants?page=${merchantPage}&limit=${PAGE_SIZE}${status}${query}`)
+        .then((d) => {
+          if (cancelled) return
+          // The last item on a page was approved/rejected away — step back to the page before
+          if (d.merchants.length === 0 && merchantPage > 1) {
+            setMerchantPage(merchantPage - 1)
+            return
+          }
+          setMerchants(d.merchants)
+          setMerchantPaging(d)
+        })
+        .catch((err) => !cancelled && setError(err.message))
+        .finally(() => !cancelled && setLoadingMerchants(false))
+    }, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [adminToken, adminApi, merchantFilter, merchantSearch, merchantPage, merchantsVersion])
 
   useEffect(() => {
     if (!adminToken) return
+    let cancelled = false
     // Small delay so we don't search on every keystroke
     const timer = setTimeout(() => {
       const query = search.trim() ? `&search=${encodeURIComponent(search.trim())}` : ''
-      adminApi(`/admin/members?limit=100${query}`)
-        .then((d) => setMembers(d.members))
-        .catch((err) => setError(err.message))
+      setLoadingMembers(true)
+      adminApi(`/admin/members?page=${memberPage}&limit=${PAGE_SIZE}${query}`)
+        .then((d) => {
+          if (cancelled) return
+          setMembers(d.members)
+          setMemberPaging(d)
+        })
+        .catch((err) => !cancelled && setError(err.message))
+        .finally(() => !cancelled && setLoadingMembers(false))
     }, 300)
-    return () => clearTimeout(timer)
-  }, [adminToken, adminApi, search])
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [adminToken, adminApi, search, memberPage])
 
   if (!adminToken) {
     return <Navigate to="/admin" replace />
@@ -124,13 +167,9 @@ export default function AdminDashboard() {
     setError('')
     setBusyId(merchant._id)
     try {
-      const { merchant: updated } = await adminApi(`/admin/merchants/${merchant._id}/status`, {
-        method: 'PATCH',
-        body: { status },
-      })
-      setMerchants((list) =>
-        merchantFilter === 'all' ? list.map((m) => (m._id === updated._id ? updated : m)) : list.filter((m) => m._id !== updated._id),
-      )
+      await adminApi(`/admin/merchants/${merchant._id}/status`, { method: 'PATCH', body: { status } })
+      // Reload the page so the list and its counts stay right (the merchant may have left this filter)
+      setMerchantsVersion((v) => v + 1)
       loadStats()
     } catch (err) {
       setError(err.message)
@@ -139,16 +178,27 @@ export default function AdminDashboard() {
     }
   }
 
-  // Logs this browser in as the ALEOS master merchant and opens the normal merchant dashboard for it
+  // Logs this browser in as the ALEOS master merchant and opens its merchant dashboard in a new tab, leaving the
+  // admin panel open here. The tab is opened straight away (browsers block tabs opened after waiting on the
+  // server) and pointed at the dashboard once the login is ready; the login is shared with it via localStorage.
   async function openMasterDashboard() {
     setError('')
+    const tab = window.open('', '_blank')
     setOpeningMaster(true)
     try {
       const { token } = await adminApi('/admin/master-merchant/session', { method: 'POST' })
       signInMerchant(token)
-      navigate('/merchant/dashboard')
+      if (tab) {
+        tab.opener = null // the new tab can't reach back into the admin panel
+        tab.location.href = '/merchant/dashboard'
+      } else {
+        // Pop-ups blocked: fall back to opening it in this tab
+        navigate('/merchant/dashboard')
+      }
     } catch (err) {
+      tab?.close()
       setError(err.message)
+    } finally {
       setOpeningMaster(false)
     }
   }
@@ -181,19 +231,20 @@ export default function AdminDashboard() {
   }
 
   const tabClass = (active) =>
-    `rounded-lg px-4 py-2 text-[13px] font-semibold ${active ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`
+    `rounded-lg px-4 py-2 text-[13px] font-semibold ${active ? 'bg-brand-navy text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`
 
   return (
     <Layout>
       <div className="mb-2.5 flex items-center justify-between">
-        <h2 className="m-0 text-xl font-semibold text-indigo-600">Admin Monitoring Panel</h2>
+        <h2 className="m-0 text-xl font-semibold text-brand-blue">Admin Monitoring Panel</h2>
         <button className={`${btnDanger} px-3 py-1.5 text-xs`} onClick={handleLogout}>
           Logout Admin
         </button>
       </div>
 
       <div className={infoBoxAdminClass}>
-        📊 Review merchant applications, and view members, points issued, spending and referrals.
+        <Icon name="chart" className={inlineIconClass} />
+        Review merchant applications, and view members, points issued, spending and referrals.
       </div>
 
       {error && <div className={errorBoxClass}>{error}</div>}
@@ -222,13 +273,29 @@ export default function AdminDashboard() {
 
       {tab === 'merchants' ? (
         <>
+          <input
+            type="search"
+            placeholder="Search by business, owner, city, email, mobile or Merchant ID"
+            value={merchantSearch}
+            onChange={(e) => {
+              setMerchantSearch(e.target.value)
+              setMerchantPage(1)
+            }}
+            className={`${inputClass} mb-3`}
+          />
+
           <div className="mb-3 flex flex-wrap gap-2">
             {merchantFilters.map((f) => (
               <button
                 key={f}
-                onClick={() => setMerchantFilter(f)}
+                onClick={() => {
+                  setMerchantFilter(f)
+                  setMerchantPage(1)
+                }}
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold capitalize ${
-                  merchantFilter === f ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  merchantFilter === f
+                    ? 'bg-brand-navy text-white'
+                    : 'bg-brand-light text-brand-navy hover:bg-brand-blue/20'
                 }`}
               >
                 {f}
@@ -241,7 +308,7 @@ export default function AdminDashboard() {
             ))}
           </div>
 
-          <div className="overflow-x-auto">
+          <div className={`overflow-x-auto transition-opacity ${loadingMerchants ? 'opacity-50' : ''}`}>
             <table className="w-full border-collapse text-left text-[13px]">
               <thead>
                 <tr>
@@ -257,7 +324,11 @@ export default function AdminDashboard() {
                 {merchants.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-2.5 py-5 text-center text-slate-500">
-                      No {merchantFilter === 'all' ? '' : merchantFilter} merchants.
+                      {loadingMerchants
+                        ? 'Loading…'
+                        : merchantSearch.trim()
+                          ? `No ${merchantFilter === 'all' ? '' : `${merchantFilter} `}merchants match “${merchantSearch.trim()}”.`
+                          : `No ${merchantFilter === 'all' ? '' : merchantFilter} merchants.`}
                     </td>
                   </tr>
                 ) : (
@@ -267,13 +338,13 @@ export default function AdminDashboard() {
                         <span className="block font-bold text-slate-900">
                           {m.businessName}
                           {m.isMaster && (
-                            <span className="ml-1.5 rounded-md bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-indigo-700">
+                            <span className="ml-1.5 rounded-md bg-brand-light px-1.5 py-0.5 text-[10px] font-bold uppercase text-brand-navy">
                               Master
                             </span>
                           )}
                         </span>
                         {m.merchantId && (
-                          <span className="block font-mono text-xs font-bold tracking-wider text-indigo-600">
+                          <span className="block font-mono text-xs font-bold tracking-wider text-brand-blue">
                             {m.merchantId}
                           </span>
                         )}
@@ -283,7 +354,7 @@ export default function AdminDashboard() {
                         </span>
                         <Link
                           to={`/admin/merchants/${m._id}`}
-                          className="mt-1 inline-block text-xs font-semibold text-indigo-600 hover:underline"
+                          className="mt-1 inline-block text-xs font-semibold text-brand-blue hover:underline"
                         >
                           View Profile →
                         </Link>
@@ -329,17 +400,31 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+          {merchantPaging && (
+            <Pagination
+              label="Merchant list pages"
+              page={merchantPaging.page}
+              totalPages={merchantPaging.totalPages}
+              total={merchantPaging.total}
+              limit={merchantPaging.limit}
+              disabled={loadingMerchants}
+              onChange={setMerchantPage}
+            />
+          )}
         </>
       ) : tab === 'members' ? (
         <>
           <input
             type="search"
-            placeholder="Search by name, email or mobile"
+            placeholder="Search by name, email, mobile or referral code"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value)
+              setMemberPage(1)
+            }}
             className={inputClass}
           />
-          <div className="overflow-x-auto">
+          <div className={`overflow-x-auto transition-opacity ${loadingMembers ? 'opacity-50' : ''}`}>
             <table className="w-full border-collapse text-left text-[13px]">
               <thead>
                 <tr>
@@ -355,7 +440,11 @@ export default function AdminDashboard() {
                 {members.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-2.5 py-5 text-center text-slate-500">
-                      No members found.
+                      {loadingMembers
+                        ? 'Loading…'
+                        : search.trim()
+                          ? `No members match “${search.trim()}”.`
+                          : 'No members yet.'}
                     </td>
                   </tr>
                 ) : (
@@ -366,6 +455,12 @@ export default function AdminDashboard() {
                           {m.name || <span className="font-normal italic text-slate-400">No name yet</span>}
                         </span>
                         <span className="text-xs text-slate-500">Joined {formatDate(m.createdAt)}</span>
+                        <Link
+                          to={`/admin/members/${m._id}`}
+                          className="mt-1 block text-xs font-semibold text-brand-blue hover:underline"
+                        >
+                          View Profile →
+                        </Link>
                       </td>
                       <td className={`${tdClass} text-xs text-slate-600`}>
                         {m.email}
@@ -389,10 +484,23 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+          {memberPaging && (
+            <Pagination
+              label="Member list pages"
+              page={memberPaging.page}
+              totalPages={memberPaging.totalPages}
+              total={memberPaging.total}
+              limit={memberPaging.limit}
+              disabled={loadingMembers}
+              onChange={setMemberPage}
+            />
+          )}
         </>
       ) : tab === 'master' ? (
-        <div className="max-w-2xl rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
-          <h4 className="mt-0 mb-1 font-semibold text-slate-700">👑 ALEOS Master Merchant</h4>
+        <div className="max-w-2xl rounded-xl border border-brand-blue/30 bg-brand-light/50 p-4">
+          <PanelTitle icon="crown" className="mt-0 mb-1">
+            ALEOS Master Merchant
+          </PanelTitle>
           <p className="mt-0 mb-4 text-[13px] text-slate-500">
             The company’s own merchant account. Use it like any merchant — give points to members, recharge its wallet,
             set its discount and share its referral code. Members who join with code{' '}
@@ -411,15 +519,15 @@ export default function AdminDashboard() {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  className={`${btnBase} bg-indigo-600 text-white`}
+                  className={`${btnBase} bg-brand-navy text-white`}
                   disabled={openingMaster}
                   onClick={openMasterDashboard}
                 >
-                  {openingMaster ? 'Opening…' : 'Open Master Merchant Dashboard →'}
+                  {openingMaster ? 'Opening…' : 'Open Master Merchant Dashboard ↗'}
                 </button>
                 <Link
                   to={`/admin/merchants/${master.merchant._id}`}
-                  className={`${btnBase} bg-white text-indigo-700 ring-1 ring-indigo-200`}
+                  className={`${btnBase} bg-white text-brand-navy ring-1 ring-brand-blue/30`}
                 >
                   View Profile
                 </Link>
@@ -429,14 +537,19 @@ export default function AdminDashboard() {
         </div>
       ) : (
         <div className="max-w-lg rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h4 className="mt-0 mb-1 font-semibold text-slate-700">💸 Merchant Withdrawal Fee</h4>
+          <PanelTitle icon="banknote" className="mt-0 mb-1">
+            Merchant Withdrawal Fee
+          </PanelTitle>
           <p className="mt-0 mb-3 text-[13px] text-slate-500">
             % kept from every merchant withdrawal. At {settings?.withdrawalFeePercent ?? 0}%, withdrawing 1,000 points
             sends ₹{(1000 - (1000 * (settings?.withdrawalFeePercent ?? 0)) / 100).toLocaleString('en-IN')} to their bank.
             Changes apply to new withdrawals only.
           </p>
           {settingsSaved && (
-            <div className={`${infoBoxAdminClass} mb-3`}>✅ Withdrawal fee set to {settings.withdrawalFeePercent}%.</div>
+            <div className={`${infoBoxAdminClass} mb-3`}>
+              <Icon name="checkCircle" className={inlineIconClass} />
+              Withdrawal fee set to {settings.withdrawalFeePercent}%.
+            </div>
           )}
           <form onSubmit={saveSettings} className="flex items-stretch gap-2">
             <input
@@ -452,7 +565,7 @@ export default function AdminDashboard() {
               }}
               className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
             />
-            <button type="submit" className={`${btnBase} bg-indigo-600 text-white whitespace-nowrap`} disabled={savingSettings}>
+            <button type="submit" className={`${btnBase} bg-brand-navy text-white whitespace-nowrap`} disabled={savingSettings}>
               {savingSettings ? 'Saving…' : 'Save'}
             </button>
           </form>

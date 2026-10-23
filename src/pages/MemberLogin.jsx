@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import Icon, { inlineIconClass } from '../components/Icon'
 import Layout from '../components/Layout'
 import { btnPrimary, btnSecondary, errorBoxClass, infoBoxClass, inputClass, labelClass } from '../components/ui'
 import { useAuth } from '../store/auth'
@@ -66,7 +67,10 @@ export default function MemberLogin() {
   return (
     <Layout>
       <h2 className="mt-0 mb-4 text-xl font-semibold text-slate-900">Member Login</h2>
-      <div className={infoBoxClass}>📧 Enter the email you joined with. We'll send you a one-time code.</div>
+      <div className={infoBoxClass}>
+        <Icon name="mail" className={inlineIconClass} />
+        Enter the email you joined with. We'll send you a one-time code.
+      </div>
 
       {error && <div className={errorBoxClass}>{error}</div>}
 
@@ -101,7 +105,7 @@ export default function MemberLogin() {
             </button>
           )}
         </div>
-        <div className="mb-3 mt-1 text-xs font-semibold text-blue-600">{otpMessage}</div>
+        <div className="mb-3 mt-1 text-xs font-semibold text-brand-blue">{otpMessage}</div>
 
         {otpSent && (
           <>
@@ -121,7 +125,7 @@ export default function MemberLogin() {
               Didn't get it?{' '}
               <button
                 type="button"
-                className="font-semibold text-blue-600 disabled:text-slate-400"
+                className="font-semibold text-brand-blue disabled:text-slate-400"
                 disabled={resendIn > 0 || sending}
                 onClick={sendOtp}
               >
@@ -138,7 +142,7 @@ export default function MemberLogin() {
 
       <p className="mt-4 mb-0 text-center text-xs text-slate-500">
         Not a member yet?{' '}
-        <Link to="/join/member" className="font-semibold text-blue-600">
+        <Link to="/join/member" className="font-semibold text-brand-blue">
           Join now
         </Link>
       </p>

@@ -22,7 +22,7 @@ export default function Layout({ children, bare = false }) {
 
   const linkClass = ({ isActive }) =>
     `rounded-lg px-3 py-2 text-sm font-semibold transition-colors ${
-      isActive ? 'text-blue-600' : 'text-slate-600 hover:text-slate-900'
+      isActive ? 'text-brand-blue' : 'text-slate-600 hover:text-brand-navy'
     }`
 
   return (
@@ -44,7 +44,7 @@ export default function Layout({ children, bare = false }) {
             {!memberToken && (
               <Link
                 to="/join/member"
-                className="ml-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
+                className="ml-2 rounded-lg bg-brand-navy px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-blue"
               >
                 Join now
               </Link>
@@ -77,7 +77,7 @@ export default function Layout({ children, bare = false }) {
               {!memberToken && (
                 <Link
                   to="/join/member"
-                  className="my-2 rounded-lg bg-blue-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
+                  className="my-2 rounded-lg bg-brand-navy px-4 py-2.5 text-center text-sm font-semibold text-white"
                 >
                   Join now
                 </Link>
@@ -91,7 +91,7 @@ export default function Layout({ children, bare = false }) {
         {bare ? children : <div className={`${containerClass} py-8 sm:py-12`}>{children}</div>}
       </main>
 
-      <footer className="border-t border-slate-200 bg-slate-50">
+      <footer className="border-t border-slate-200 bg-brand-light/60">
         <div
           className={`${containerClass} flex flex-col items-center justify-between gap-3 py-6 text-[13px] text-slate-500 sm:flex-row`}
         >

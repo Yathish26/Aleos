@@ -79,11 +79,11 @@ export default function TermsPage({ title, appliesTo, sections, contactTitle, co
           </section>
         ))}
 
-        <section className="rounded-xl border border-blue-200 bg-blue-50/60 p-5">
+        <section className="rounded-xl border border-brand-blue/30 bg-brand-light/60 p-5">
           <h2 className="mt-0 mb-2 text-lg font-bold text-slate-900">{contactTitle}</h2>
           <p className="m-0 leading-relaxed text-slate-600">
             {contactText}, email us at{' '}
-            <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-blue-600">
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-brand-blue">
               {SUPPORT_EMAIL}
             </a>
             .

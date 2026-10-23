@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import Icon, { inlineIconClass } from '../components/Icon'
 import Layout from '../components/Layout'
 import { btnAdmin, errorBoxClass, infoBoxAdminClass, inputClass, labelClass } from '../components/ui'
 import { useAuth } from '../store/auth'
@@ -34,8 +35,11 @@ export default function AdminLogin() {
 
   return (
     <Layout>
-      <h2 className="mt-0 mb-4 text-xl font-semibold text-indigo-600">Admin Panel Login</h2>
-      <div className={infoBoxAdminClass}>🔑 Restricted area. Log in with your admin account.</div>
+      <h2 className="mt-0 mb-4 text-xl font-semibold text-brand-blue">Admin Panel Login</h2>
+      <div className={infoBoxAdminClass}>
+        <Icon name="key" className={inlineIconClass} />
+        Restricted area. Log in with your admin account.
+      </div>
 
       {error && <div className={errorBoxClass}>{error}</div>}
 

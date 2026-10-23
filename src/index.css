@@ -1,9 +1,27 @@
 @import 'tailwindcss';
 
+/* ALEOS brand (from the brand guide): use as bg-brand-navy, text-brand-cyan, font-display, etc. */
+@theme {
+  --color-brand-navy: #0b2e67; /* Primary Blue — trust / stability */
+  --color-brand-cyan: #00d1e6; /* Accent Cyan — innovation / tech */
+  --color-brand-blue: #2e8bff; /* Secondary Blue — growth / progress */
+  --color-brand-light: #e8f6ff; /* Light Background — clean / modern */
+
+  --font-sans: 'Open Sans', ui-sans-serif, system-ui, sans-serif; /* body text */
+  --font-display: 'Montserrat', ui-sans-serif, system-ui, sans-serif; /* logo & headings */
+}
+
 html {
   @apply scroll-smooth antialiased;
 }
 
 body {
-  @apply m-0 bg-white text-slate-800;
+  @apply m-0 bg-white font-sans text-slate-800;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  @apply font-display;
 }

@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { api, formatDate, formatTimeIST } from '../api'
+import { api } from '../api'
+import Icon, { inlineIconClass } from '../components/Icon'
 import Layout from '../components/Layout'
+import MerchantHistory from '../components/MerchantHistory'
+import PanelTitle from '../components/PanelTitle'
+import ShareButtons from '../components/ShareButtons'
 import {
   badgePointsClass,
   btnPrimary,
@@ -10,8 +14,6 @@ import {
   infoBoxSuccessClass,
   inputClass,
   labelClass,
-  tdClass,
-  thClass,
 } from '../components/ui'
 import { useAuth } from '../store/auth'
 
@@ -27,16 +29,7 @@ const rupees = (n) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2
 const MEMBER_SHARE = 0.8
 const REFERRER_SHARE = 0.1
 
-// Icon for each kind of passbook entry (types come from the server)
-const passbookIcons = {
-  'Points given': '🎁',
-  Recharge: '👛',
-  'Sign-up top-up': '👛',
-  Withdrawal: '💸',
-  'Points used by member': '🔁',
-  'Referral share': '🤝',
-  'ALEOS share': '👑',
-}
+const panelClass = 'mb-5 rounded-2xl border border-brand-blue/20 bg-brand-light/50 p-4 sm:p-5'
 
 // Who got the referrer's share of a bill
 const referrerLabel = (t) =>
@@ -95,8 +88,6 @@ export default function MerchantDashboard() {
   const [passbook, setPassbook] = useState(null)
   const [passbookVersion, setPassbookVersion] = useState(0)
   const reloadPassbook = () => setPassbookVersion((v) => v + 1)
-  // Which history tab is open: 'passbook' | 'used' | 'recharges' | 'withdrawals'
-  const [historyTab, setHistoryTab] = useState('passbook')
 
   useEffect(() => {
     if (!merchantToken) return
@@ -456,18 +447,22 @@ export default function MerchantDashboard() {
 
       {error && <div className={errorBoxClass}>{error}</div>}
 
-      <div className="mb-5 rounded-2xl border border-blue-200 bg-blue-50 p-4">
-        <div className="text-xs font-bold uppercase text-blue-800">👛 Wallet Points</div>
-        <div className="text-3xl font-extrabold text-blue-700">{pts(walletBalance)}</div>
-        <div className="mt-0.5 text-xs text-blue-900/70">
+      <div className="mb-5 rounded-2xl border border-brand-blue/30 bg-brand-light p-4">
+        <div className="flex items-center gap-1.5 text-xs font-bold uppercase text-brand-navy">
+          <Icon name="wallet" className="h-4 w-4" />
+          Wallet Points
+        </div>
+        <div className="text-3xl font-extrabold text-brand-navy">{pts(walletBalance)}</div>
+        <div className="mt-0.5 text-xs text-brand-navy/70">
           Points you can still give to members. ₹1 recharge = 1 point, plus a {FEE_PERCENT} convenience fee.
         </div>
 
-        <form onSubmit={handleRecharge} className="mt-4 border-t border-blue-200 pt-4">
+        <form onSubmit={handleRecharge} className="mt-4 border-t border-brand-blue/30 pt-4">
           {rechargeError && <div className={errorBoxClass}>{rechargeError}</div>}
           {recharged && (
             <div className={infoBoxSuccessClass}>
-              ✅ {pts(recharged.points)} added for {rupees(recharged.amount)}. Ref: {recharged.reference}
+              <Icon name="checkCircle" className={inlineIconClass} />
+              {pts(recharged.points)} added for {rupees(recharged.amount)}. Ref: {recharged.reference}
             </div>
           )}
           <label className={labelClass}>Recharge Amount (₹, minimum {rupees(MIN_RECHARGE)})</label>
@@ -485,18 +480,19 @@ export default function MerchantDashboard() {
               {recharging ? 'Processing…' : 'Recharge'}
             </button>
           </div>
-          <div className="mt-1.5 text-xs text-blue-900/70">
+          <div className="mt-1.5 text-xs text-brand-navy/70">
             {rechargeValid
               ? `You get ${pts(rechargeValue)} · ${rupees(rechargeValue)} + ${rupees(rechargeFee)} convenience fee (${FEE_PERCENT}) = ${rupees(rechargeValue + rechargeFee)} (test payment)`
               : `Enter at least ${rupees(MIN_RECHARGE)}.`}
           </div>
         </form>
 
-        <form onSubmit={handleWithdraw} className="mt-4 border-t border-blue-200 pt-4">
+        <form onSubmit={handleWithdraw} className="mt-4 border-t border-brand-blue/30 pt-4">
           {withdrawError && <div className={errorBoxClass}>{withdrawError}</div>}
           {withdrawn && (
             <div className={infoBoxSuccessClass}>
-              ✅ {pts(withdrawn.points)} withdrawn · {rupees(withdrawn.amount)} sent to {withdrawn.bankName || 'your bank'}{' '}
+              <Icon name="checkCircle" className={inlineIconClass} />
+              {pts(withdrawn.points)} withdrawn · {rupees(withdrawn.amount)} sent to {withdrawn.bankName || 'your bank'}{' '}
               ··{withdrawn.accountLast4}
               {withdrawn.fee > 0 && ` (after ${rupees(withdrawn.fee)} fee)`}. Ref: {withdrawn.reference}
             </div>
@@ -533,7 +529,7 @@ export default function MerchantDashboard() {
               {withdrawing ? 'Processing…' : 'Withdraw'}
             </button>
           </div>
-          <div className="mt-1.5 text-xs text-blue-900/70">
+          <div className="mt-1.5 text-xs text-brand-navy/70">
             {!bankLast4
               ? 'No bank account on file — contact support to add your bank details.'
               : withdrawValid
@@ -547,10 +543,12 @@ export default function MerchantDashboard() {
         </form>
       </div>
 
-      <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+      <div className={panelClass}>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h4 className="m-0 font-semibold text-slate-700">🏷️ Your Discount %</h4>
+            <PanelTitle icon="tag" className="m-0">
+              Your Discount %
+            </PanelTitle>
             <p className="mt-1 mb-0 text-[13px] text-slate-500">
               Members get this % of their bill as reward points. A ₹500 bill at {mainDiscount}% earns{' '}
               {pts(Math.floor((500 * mainDiscount) / 100))}.
@@ -561,7 +559,7 @@ export default function MerchantDashboard() {
               <div className="text-2xl font-extrabold text-slate-900">{mainDiscount}%</div>
               <button
                 type="button"
-                className="text-xs font-semibold text-blue-600 hover:underline"
+                className="text-xs font-semibold text-brand-blue hover:underline"
                 onClick={() => {
                   setDiscountDraft(String(mainDiscount))
                   setDiscountSaved(false)
@@ -573,7 +571,12 @@ export default function MerchantDashboard() {
           )}
         </div>
 
-        {discountSaved && <div className={`${infoBoxSuccessClass} mt-3 mb-0`}>✅ Discount updated to {mainDiscount}%.</div>}
+        {discountSaved && (
+          <div className={`${infoBoxSuccessClass} mt-3 mb-0`}>
+            <Icon name="checkCircle" className={inlineIconClass} />
+            Discount updated to {mainDiscount}%.
+          </div>
+        )}
 
         {discountDraft !== null && (
           <form onSubmit={saveDiscount} className="mt-3">
@@ -609,8 +612,8 @@ export default function MerchantDashboard() {
       </div>
 
       {referralCode && (
-        <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <h4 className="mt-0 mb-2 font-semibold text-slate-700">🎟️ Your Referral Code</h4>
+        <div className={panelClass}>
+          <PanelTitle icon="ticket">Your Referral Code</PanelTitle>
           <p className="mb-3 text-[13px] text-slate-500">
             Share this with your customers — they can use it to sign up as ALEOS members. New customers you add while
             giving points also count as your referrals.
@@ -621,7 +624,14 @@ export default function MerchantDashboard() {
               {referralCode}
             </div>
             <button type="button" className={`${btnSecondary} whitespace-nowrap`} onClick={() => copyText(referralCode, 'code')}>
-              {copied === 'code' ? 'Copied ✓' : 'Copy Code'}
+              {copied === 'code' ? (
+                <>
+                  <Icon name="check" className="mr-1.5 h-4 w-4" strokeWidth={3} />
+                  Copied
+                </>
+              ) : (
+                'Copy Code'
+              )}
             </button>
           </div>
 
@@ -633,18 +643,22 @@ export default function MerchantDashboard() {
               className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1 text-xs`}
             />
             <button type="button" className={`${btnSecondary} whitespace-nowrap`} onClick={() => copyText(referralLink, 'link')}>
-              {copied === 'link' ? 'Copied ✓' : 'Copy Link'}
+              {copied === 'link' ? (
+                <>
+                  <Icon name="check" className="mr-1.5 h-4 w-4" strokeWidth={3} />
+                  Copied
+                </>
+              ) : (
+                'Copy Link'
+              )}
             </button>
           </div>
 
-          <a
-            href={`https://wa.me/?text=${encodeURIComponent(referralMessage)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex w-full items-center justify-center rounded-lg bg-[#25D366] p-2.5 text-[13px] font-bold text-white hover:opacity-90"
-          >
-            💬 Share on WhatsApp
-          </a>
+          <ShareButtons
+            message={referralMessage}
+            link={referralLink}
+            telegramText={`Join ALEOS Rewards and earn points at ${merchant.businessName}!`}
+          />
 
           <div className="mt-4 text-[13px] text-slate-600">
             <span className="font-semibold">Members joined with your code: {data.referrals.length}</span>
@@ -660,14 +674,14 @@ export default function MerchantDashboard() {
           <div className="text-xs font-bold uppercase text-green-800">Points Given</div>
           <div className="text-3xl font-extrabold text-green-700">{pts(totalPoints)}</div>
         </div>
-        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center">
+        <div className="rounded-2xl border border-brand-blue/20 bg-brand-light p-4 text-center">
           <div className="text-xs font-bold uppercase text-slate-500">Sales Recorded</div>
-          <div className="text-3xl font-extrabold text-blue-600">{rupees(totalSales)}</div>
+          <div className="text-3xl font-extrabold text-brand-blue">{rupees(totalSales)}</div>
         </div>
       </div>
 
-      <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <h4 className="mt-0 mb-2 font-semibold text-slate-700">🎁 Give Reward Points</h4>
+      <div className={panelClass}>
+        <PanelTitle icon="gift">Give Reward Points</PanelTitle>
         <p className="mb-3 text-[13px] text-slate-500">
           Enter the customer’s email and the bill amount. Your discount % of the bill is taken from your wallet as
           points and shared: {MEMBER_SHARE * 100}% to the customer, {REFERRER_SHARE * 100}% to whoever referred them
@@ -678,7 +692,8 @@ export default function MerchantDashboard() {
         {issueError && <div className={errorBoxClass}>{issueError}</div>}
         {issued && (
           <div className={infoBoxSuccessClass}>
-            ✅ {pts(issued.totalPoints ?? issued.pointsEarned)} given: {pts(issued.pointsEarned)} to{' '}
+            <Icon name="checkCircle" className={inlineIconClass} />
+            {pts(issued.totalPoints ?? issued.pointsEarned)} given: {pts(issued.pointsEarned)} to{' '}
             {issued.member?.name || issued.member?.email || 'the customer'}
             {issued.referrerPoints > 0 &&
               `, ${pts(issued.referrerPoints)} to their referrer ${referrerLabel(issued)}`}
@@ -763,7 +778,7 @@ export default function MerchantDashboard() {
                 Didn’t get it?{' '}
                 <button
                   type="button"
-                  className="font-semibold text-blue-600 disabled:text-slate-400"
+                  className="font-semibold text-brand-blue disabled:text-slate-400"
                   disabled={issuing}
                   onClick={() => issuePoints({ withOtp: false })}
                 >
@@ -789,8 +804,8 @@ export default function MerchantDashboard() {
         </form>
       </div>
 
-      <div className="mb-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-        <h4 className="mt-0 mb-2 font-semibold text-slate-700">🔁 Use Member Points</h4>
+      <div className={panelClass}>
+        <PanelTitle icon="repeat">Use Member Points</PanelTitle>
         <p className="mb-3 text-[13px] text-slate-500">
           When a member wants to pay with their points, enter their email to see their points. They get a code by
           email to approve it, and the points they use are added to your wallet.
@@ -799,7 +814,8 @@ export default function MerchantDashboard() {
         {redeemError && <div className={errorBoxClass}>{redeemError}</div>}
         {redeemed && (
           <div className={infoBoxSuccessClass}>
-            ✅ {pts(redeemed.points)} used by {redeemed.member?.name || redeemed.member?.email || 'the member'}. They now
+            <Icon name="checkCircle" className={inlineIconClass} />
+            {pts(redeemed.points)} used by {redeemed.member?.name || redeemed.member?.email || 'the member'}. They now
             have {pts(redeemed.memberPointsAfter ?? 0)}. Added to your wallet.
           </div>
         )}
@@ -877,7 +893,7 @@ export default function MerchantDashboard() {
                       {redeemOtpSent.message} — ask the member for the code to approve using {pts(Number(redeemAmount))}.{' '}
                       <button
                         type="button"
-                        className="font-semibold text-blue-600"
+                        className="font-semibold text-brand-blue"
                         onClick={() => {
                           setRedeemOtpSent(null)
                           setRedeemOtp('')
@@ -902,7 +918,7 @@ export default function MerchantDashboard() {
                       Didn’t get it?{' '}
                       <button
                         type="button"
-                        className="font-semibold text-blue-600 disabled:text-slate-400"
+                        className="font-semibold text-brand-blue disabled:text-slate-400"
                         disabled={redeeming}
                         onClick={() => redeemCustomerPoints({ withOtp: false })}
                       >
@@ -929,257 +945,13 @@ export default function MerchantDashboard() {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-4 pt-4">
-          <h3 className="m-0 pb-3 text-base font-semibold text-slate-800">History</h3>
-          <div className="pb-3 text-xs text-slate-500">
-            Wallet balance <span className="font-bold text-slate-900">{pts(walletBalance)}</span>
-          </div>
-          <div role="tablist" className="-mb-px flex w-full gap-1 overflow-x-auto">
-            {[
-              { id: 'passbook', label: '📒 Passbook', count: passbook?.length },
-              { id: 'used', label: '🔁 Points Used', count: data.redemptions.length },
-              { id: 'recharges', label: '👛 Recharges', count: payments.length },
-              { id: 'withdrawals', label: '💸 Withdrawals', count: withdrawals.length },
-            ].map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="tab"
-                aria-selected={historyTab === t.id}
-                onClick={() => setHistoryTab(t.id)}
-                className={`flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2.5 text-[13px] font-semibold whitespace-nowrap transition-colors ${
-                  historyTab === t.id
-                    ? 'border-blue-600 text-blue-700'
-                    : 'border-transparent text-slate-500 hover:text-slate-800'
-                }`}
-              >
-                {t.label}
-                {t.count > 0 && (
-                  <span
-                    className={`rounded-full px-1.5 py-0.5 text-[11px] leading-none ${
-                      historyTab === t.id ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-500'
-                    }`}
-                  >
-                    {t.count}
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
-
-      {historyTab === 'passbook' && (
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left text-[13px]">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className={thClass}>Date</th>
-              <th className={thClass}>Particulars</th>
-              <th className={`${thClass} text-right`}>Credit (+)</th>
-              <th className={`${thClass} text-right`}>Debit (−)</th>
-              <th className={`${thClass} text-right`}>Balance</th>
-            </tr>
-          </thead>
-          <tbody>
-            {passbook === null ? (
-              <tr>
-                <td colSpan={5} className="px-2.5 py-5 text-center text-slate-500">
-                  Loading…
-                </td>
-              </tr>
-            ) : passbook.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-2.5 py-5 text-center text-slate-500">
-                  No wallet activity yet.
-                </td>
-              </tr>
-            ) : (
-              passbook.map((e) => (
-                <tr key={e.id} className="hover:bg-slate-50/70">
-                  <td className={`${tdClass} whitespace-nowrap text-slate-700`}>
-                    {formatDate(e.date)}
-                    <span className="block text-xs text-slate-500">{formatTimeIST(e.date)}</span>
-                  </td>
-                  <td className={tdClass}>
-                    <div className="flex items-start gap-2.5">
-                      <span
-                        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm ${
-                          e.credit ? 'bg-emerald-50' : 'bg-red-50'
-                        }`}
-                      >
-                        {passbookIcons[e.type] || '•'}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="block font-semibold text-slate-900">{e.type}</span>
-                        <span className="text-xs text-slate-500">
-                          {e.details}
-                          {e.reference && ` · Ref ${e.reference}`}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className={`${tdClass} text-right font-semibold whitespace-nowrap text-emerald-600`}>
-                    {e.credit ? `+${e.credit.toLocaleString('en-IN')}` : ''}
-                  </td>
-                  <td className={`${tdClass} text-right font-semibold whitespace-nowrap text-red-600`}>
-                    {e.debit ? `−${e.debit.toLocaleString('en-IN')}` : ''}
-                  </td>
-                  <td className={`${tdClass} text-right font-bold whitespace-nowrap text-slate-900`}>
-                    {e.balanceAfter.toLocaleString('en-IN')}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      )}
-
-      {historyTab === 'used' && (
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left text-[13px]">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className={thClass}>Date</th>
-              <th className={thClass}>Member</th>
-              <th className={`${thClass} text-right`}>Points Used</th>
-              <th className={`${thClass} text-right`}>Wallet After</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.redemptions.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-2.5 py-5 text-center text-slate-500">
-                  No points used at your shop yet.
-                </td>
-              </tr>
-            ) : (
-              data.redemptions.map((r) => (
-                <tr key={r._id}>
-                  <td className={`${tdClass} font-semibold text-slate-700`}>
-                    {formatDate(r.createdAt)}
-                    <span className="block text-xs font-normal text-slate-500">{formatTimeIST(r.createdAt)}</span>
-                  </td>
-                  <td className={tdClass}>
-                    <span className="block font-bold text-slate-900">
-                      {r.member ? r.member.name || r.member.email : 'Removed member'}
-                    </span>
-                    {r.member?.name && <span className="text-xs text-slate-500">{r.member.email}</span>}
-                  </td>
-                  <td className={`${tdClass} text-right`}>
-                    <span className={badgePointsClass}>+{pts(r.points)}</span>
-                  </td>
-                  <td className={`${tdClass} text-right text-slate-600`}>
-                    {r.merchantWalletAfter != null ? pts(r.merchantWalletAfter) : '—'}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      )}
-
-      {historyTab === 'recharges' && (
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left text-[13px]">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className={thClass}>Date</th>
-              <th className={thClass}>Type</th>
-              <th className={`${thClass} text-right`}>Paid</th>
-              <th className={`${thClass} text-right`}>Points Added</th>
-              <th className={`${thClass} text-right`}>Wallet After</th>
-            </tr>
-          </thead>
-          <tbody>
-            {payments.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-2.5 py-5 text-center text-slate-500">
-                  No recharges yet.
-                </td>
-              </tr>
-            ) : (
-              payments.map((p) => (
-                <tr key={p._id}>
-                  <td className={`${tdClass} font-semibold text-slate-700`}>{formatDate(p.createdAt)}</td>
-                  <td className={tdClass}>
-                    <span className="block font-bold text-slate-900">{p.kind === 'signup' ? 'Sign-up' : 'Recharge'}</span>
-                    <span className="text-xs text-slate-500">Ref {p.reference}</span>
-                  </td>
-                  <td className={`${tdClass} text-right`}>
-                    <span className="block font-semibold">{rupees(p.amount)}</span>
-                    <span className="text-xs text-slate-500">
-                      incl. {rupees(p.convenienceFee)} fee ({FEE_PERCENT})
-                    </span>
-                  </td>
-                  <td className={`${tdClass} text-right`}>
-                    <span className={badgePointsClass}>+{p.points.toLocaleString('en-IN')} pts</span>
-                  </td>
-                  <td className={`${tdClass} text-right text-slate-600`}>
-                    {p.walletBalanceAfter != null ? pts(p.walletBalanceAfter) : '—'}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      )}
-
-      {historyTab === 'withdrawals' && (
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left text-[13px]">
-          <thead className="bg-slate-50">
-            <tr>
-              <th className={thClass}>Date</th>
-              <th className={thClass}>Sent To</th>
-              <th className={`${thClass} text-right`}>Points</th>
-              <th className={`${thClass} text-right`}>Amount Sent</th>
-              <th className={`${thClass} text-right`}>Wallet After</th>
-            </tr>
-          </thead>
-          <tbody>
-            {withdrawals.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-2.5 py-5 text-center text-slate-500">
-                  No withdrawals yet.
-                </td>
-              </tr>
-            ) : (
-              withdrawals.map((w) => (
-                <tr key={w._id}>
-                  <td className={`${tdClass} font-semibold text-slate-700`}>
-                    {formatDate(w.createdAt)}
-                    <span className="block text-xs font-normal text-slate-500">{formatTimeIST(w.createdAt)}</span>
-                  </td>
-                  <td className={tdClass}>
-                    <span className="block font-bold text-slate-900">
-                      {w.bankName || 'Bank'} ··{w.accountLast4}
-                    </span>
-                    <span className="text-xs text-slate-500">Ref {w.reference}</span>
-                  </td>
-                  <td className={`${tdClass} text-right font-semibold text-red-600`}>−{pts(w.points)}</td>
-                  <td className={`${tdClass} text-right`}>
-                    <span className="block font-semibold">{rupees(w.amount)}</span>
-                    {w.fee > 0 && (
-                      <span className="text-xs text-slate-500">
-                        after {rupees(w.fee)} fee ({w.feePercent}%)
-                      </span>
-                    )}
-                  </td>
-                  <td className={`${tdClass} text-right text-slate-600`}>
-                    {w.walletBalanceAfter != null ? pts(w.walletBalanceAfter) : '—'}
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      )}
-      </div>
+      <MerchantHistory
+        passbook={passbook}
+        redemptions={data.redemptions}
+        payments={payments}
+        withdrawals={withdrawals}
+        walletBalance={walletBalance}
+      />
     </Layout>
   )
 }

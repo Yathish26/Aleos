@@ -1,8 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import { api, formatDate, formatTimeIST } from '../api'
+import Icon, { inlineIconClass } from '../components/Icon'
 import Layout from '../components/Layout'
-import { badgePointsClass, btnBase, btnSuccess, errorBoxClass, tdClass, thClass } from '../components/ui'
+import MerchantHistory from '../components/MerchantHistory'
+import PanelTitle from '../components/PanelTitle'
+import { btnBase, btnSuccess, errorBoxClass } from '../components/ui'
 import { useAuth } from '../store/auth'
 
 const statusBadge = {
@@ -14,10 +17,12 @@ const statusBadge = {
 const rupees = (n) => `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const pts = (n) => `${(n ?? 0).toLocaleString('en-IN')} pts`
 
-function Section({ title, children }) {
+function Section({ icon, title, children }) {
   return (
-    <div className="mb-5 rounded-xl border border-slate-200 bg-white p-4">
-      <h4 className="mt-0 mb-3 font-semibold text-slate-700">{title}</h4>
+    <div className="mb-5 rounded-2xl border border-brand-blue/20 bg-white p-4 sm:p-5">
+      <PanelTitle icon={icon} className="mt-0 mb-3">
+        {title}
+      </PanelTitle>
       {children}
     </div>
   )
@@ -35,24 +40,13 @@ function Row({ label, children }) {
 
 function Stat({ label, value, sub }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-center">
-      <div className="text-[11px] font-bold uppercase text-slate-500">{label}</div>
-      <div className="text-xl font-extrabold text-slate-900">{value}</div>
+    <div className="rounded-2xl border border-brand-blue/20 bg-brand-light p-3.5 text-center">
+      <div className="text-[11px] font-bold uppercase text-brand-navy/70">{label}</div>
+      <div className="font-display text-xl font-extrabold text-brand-navy">{value}</div>
       {sub && <div className="text-xs text-slate-500">{sub}</div>}
     </div>
   )
 }
-
-function DateCell({ value }) {
-  return (
-    <td className={`${tdClass} whitespace-nowrap text-slate-700`}>
-      {formatDate(value)}
-      <span className="block text-xs text-slate-500">{formatTimeIST(value)}</span>
-    </td>
-  )
-}
-
-const memberLabel = (m) => (m ? m.name || m.email : 'Removed member')
 
 // Admin-only: full details and activity of one merchant
 export default function AdminMerchantProfile() {
@@ -97,7 +91,7 @@ export default function AdminMerchantProfile() {
   }
 
   const back = (
-    <Link to="/admin/dashboard" className="mb-4 inline-block text-sm font-semibold text-indigo-600 hover:underline">
+    <Link to="/admin/dashboard" className="mb-4 inline-block text-sm font-semibold text-brand-blue hover:underline">
       ← Back to Admin Panel
     </Link>
   )
@@ -111,7 +105,7 @@ export default function AdminMerchantProfile() {
     )
   }
 
-  const { merchant: m, summary, transactions, redemptions, withdrawals, payments } = data
+  const { merchant: m, summary, redemptions, withdrawals, payments, passbook } = data
 
   return (
     <Layout>
@@ -122,7 +116,7 @@ export default function AdminMerchantProfile() {
           <h2 className="m-0 text-xl font-semibold text-slate-900">{m.businessName}</h2>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             {m.merchantId && (
-              <span className="rounded-md bg-indigo-50 px-2 py-0.5 font-mono text-xs font-bold tracking-wider text-indigo-700">
+              <span className="rounded-md bg-brand-light px-2 py-0.5 font-mono text-xs font-bold tracking-wider text-brand-navy">
                 {m.merchantId}
               </span>
             )}
@@ -132,8 +126,9 @@ export default function AdminMerchantProfile() {
         </div>
         <div className="flex gap-1.5">
           {m.isMaster && (
-            <span className="rounded-md bg-indigo-100 px-2 py-1 text-xs font-bold uppercase text-indigo-700">
-              👑 Master Merchant
+            <span className="rounded-md bg-brand-light px-2 py-1 text-xs font-bold uppercase text-brand-navy">
+              <Icon name="crown" className={inlineIconClass} />
+              Master Merchant
             </span>
           )}
           {!m.isMaster && m.status !== 'approved' && (
@@ -162,16 +157,17 @@ export default function AdminMerchantProfile() {
         <Stat label="Withdrawn" value={rupees(summary.amountWithdrawn)} sub={`${pts(summary.pointsWithdrawn)} · fees ${rupees(summary.withdrawalFees)}`} />
       </div>
 
-      <Section title="🏪 Business">
+      <Section icon="store" title="Business">
         <Row label="Business Name">{m.businessName}</Row>
         <Row label="Merchant ID / Referral Code">{m.merchantId && <span className="font-mono">{m.merchantId}</span>}</Row>
         <Row label="Category">{m.category}</Row>
         <Row label="Trade License">{m.tradeLicense}</Row>
+        <Row label="FSSAI Licence">{m.fssaiNumber && <span className="font-mono">{m.fssaiNumber}</span>}</Row>
         <Row label="Address">{m.address}</Row>
         <Row label="City">{m.city}</Row>
         <Row label="Google Business">
           {m.googleBusinessLink && (
-            <a href={m.googleBusinessLink} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 hover:underline">
+            <a href={m.googleBusinessLink} target="_blank" rel="noopener noreferrer" className="font-semibold text-brand-blue hover:underline">
               Open link ↗
             </a>
           )}
@@ -181,13 +177,17 @@ export default function AdminMerchantProfile() {
         <Row label="Applied">{`${formatDate(m.createdAt)}, ${formatTimeIST(m.createdAt)}`}</Row>
       </Section>
 
-      <Section title="👤 Owner & Contact">
+      <Section icon="user" title="Owner & Contact">
         <Row label="Owner Name">{m.ownerName}</Row>
         <Row label="Email">{m.email}</Row>
         <Row label="Mobile">{m.mobile && `+91 ${m.mobile}`}</Row>
+        <Row label="Aadhaar">
+          {m.aadhaarNumber && <span className="font-mono">XXXX XXXX {m.aadhaarNumber.slice(-4)}</span>}
+        </Row>
+        <Row label="PAN">{m.panNumber && <span className="font-mono">{m.panNumber}</span>}</Row>
       </Section>
 
-      <Section title="🏦 Bank Details">
+      <Section icon="bank" title="Bank Details">
         <Row label="Bank Name">{m.bankName}</Row>
         <Row label="Account Holder">{m.accountHolderName}</Row>
         <Row label="Account Number">{m.accountNumber && <span className="font-mono">{m.accountNumber}</span>}</Row>
@@ -195,7 +195,8 @@ export default function AdminMerchantProfile() {
         <Row label="Verification">
           {m.bankVerified ? (
             <span className="font-semibold text-emerald-600">
-              ✓ Verified{m.bankRegisteredName ? ` — bank name: ${m.bankRegisteredName}` : ''}
+              <Icon name="checkCircle" className={inlineIconClass} />
+              Verified{m.bankRegisteredName ? ` — bank name: ${m.bankRegisteredName}` : ''}
             </span>
           ) : (
             <span className="font-semibold text-amber-600">Not verified</span>
@@ -203,155 +204,18 @@ export default function AdminMerchantProfile() {
         </Row>
       </Section>
 
-      <Section title="👛 Recharges">
-        <div className="mb-2 text-xs text-slate-500">
-          Total recharged {rupees(summary.amountRecharged)} · convenience fees {rupees(summary.rechargeFees)}
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-[13px]">
-            <thead>
-              <tr>
-                <th className={thClass}>Date</th>
-                <th className={thClass}>Type</th>
-                <th className={`${thClass} text-right`}>Paid</th>
-                <th className={`${thClass} text-right`}>Points</th>
-              </tr>
-            </thead>
-            <tbody>
-              {payments.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-2.5 py-4 text-center text-slate-500">No recharges.</td>
-                </tr>
-              ) : (
-                payments.map((p) => (
-                  <tr key={p._id}>
-                    <DateCell value={p.createdAt} />
-                    <td className={tdClass}>
-                      <span className="block font-semibold">{p.kind === 'signup' ? 'Sign-up' : 'Recharge'}</span>
-                      <span className="text-xs text-slate-500">{p.mode === 'dummy' ? 'Test · ' : ''}Ref {p.reference}</span>
-                    </td>
-                    <td className={`${tdClass} text-right`}>
-                      {rupees(p.amount)}
-                      <span className="block text-xs text-slate-500">incl. {rupees(p.convenienceFee)} fee</span>
-                    </td>
-                    <td className={`${tdClass} text-right`}>
-                      <span className={badgePointsClass}>+{pts(p.points)}</span>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Section>
-
-      <Section title="🎁 Recent Points Given (last 20)">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-[13px]">
-            <thead>
-              <tr>
-                <th className={thClass}>Date</th>
-                <th className={thClass}>Customer</th>
-                <th className={`${thClass} text-right`}>Bill</th>
-                <th className={`${thClass} text-right`}>Points</th>
-              </tr>
-            </thead>
-            <tbody>
-              {transactions.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-2.5 py-4 text-center text-slate-500">No points given yet.</td>
-                </tr>
-              ) : (
-                transactions.map((t) => (
-                  <tr key={t._id}>
-                    <DateCell value={t.date} />
-                    <td className={tdClass}>{memberLabel(t.member)}</td>
-                    <td className={`${tdClass} text-right`}>
-                      {rupees(t.purchaseAmount)}
-                      {t.discountPercent != null && <span className="block text-xs text-slate-500">at {t.discountPercent}%</span>}
-                    </td>
-                    <td className={`${tdClass} text-right`}>
-                      <span className={badgePointsClass}>+{pts(t.totalPoints ?? t.pointsEarned)}</span>
-                      {t.totalPoints != null && (
-                        <span className="mt-1 block text-xs text-slate-500">
-                          Member {t.pointsEarned}
-                          {t.referrerPoints > 0 && ` · Referrer ${t.referrerPoints}`} · ALEOS {t.masterPoints ?? 0}
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Section>
-
-      <Section title="🔁 Recent Points Redeemed (last 20)">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-[13px]">
-            <thead>
-              <tr>
-                <th className={thClass}>Date</th>
-                <th className={thClass}>Member</th>
-                <th className={`${thClass} text-right`}>Points</th>
-              </tr>
-            </thead>
-            <tbody>
-              {redemptions.length === 0 ? (
-                <tr>
-                  <td colSpan={3} className="px-2.5 py-4 text-center text-slate-500">No points redeemed yet.</td>
-                </tr>
-              ) : (
-                redemptions.map((r) => (
-                  <tr key={r._id}>
-                    <DateCell value={r.createdAt} />
-                    <td className={tdClass}>{memberLabel(r.member)}</td>
-                    <td className={`${tdClass} text-right font-semibold`}>{pts(r.points)}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Section>
-
-      <Section title="💸 Recent Withdrawals (last 20)">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left text-[13px]">
-            <thead>
-              <tr>
-                <th className={thClass}>Date</th>
-                <th className={thClass}>Sent To</th>
-                <th className={`${thClass} text-right`}>Points</th>
-                <th className={`${thClass} text-right`}>Amount Sent</th>
-              </tr>
-            </thead>
-            <tbody>
-              {withdrawals.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-2.5 py-4 text-center text-slate-500">No withdrawals yet.</td>
-                </tr>
-              ) : (
-                withdrawals.map((w) => (
-                  <tr key={w._id}>
-                    <DateCell value={w.createdAt} />
-                    <td className={tdClass}>
-                      {w.bankName || 'Bank'} ··{w.accountLast4}
-                      <span className="block text-xs text-slate-500">{w.mode === 'dummy' ? 'Test · ' : ''}Ref {w.reference}</span>
-                    </td>
-                    <td className={`${tdClass} text-right text-red-600`}>−{pts(w.points)}</td>
-                    <td className={`${tdClass} text-right`}>
-                      {rupees(w.amount)}
-                      {w.fee > 0 && <span className="block text-xs text-slate-500">fee {rupees(w.fee)} ({w.feePercent}%)</span>}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Section>
+      <div className="mb-3 text-xs text-slate-500">
+        Total recharged {rupees(summary.amountRecharged)} · convenience fees {rupees(summary.rechargeFees)} · withdrawal
+        fees {rupees(summary.withdrawalFees)}
+      </div>
+      <MerchantHistory
+        passbook={passbook}
+        redemptions={redemptions}
+        payments={payments}
+        withdrawals={withdrawals}
+        walletBalance={m.walletBalance ?? 0}
+        shopLabel="this shop"
+      />
     </Layout>
   )
 }

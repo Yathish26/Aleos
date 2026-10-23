@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../api'
+import Icon, { inlineIconClass } from '../components/Icon'
 import SplitPage from '../components/SplitPage'
 import {
   btnPrimary,
@@ -16,9 +17,9 @@ import { useAuth } from '../store/auth'
 const RESEND_SECONDS = 30
 
 const memberPoints = [
-  { icon: '🛍️', title: 'Earn on every purchase', text: 'Points are credited automatically at partner stores.' },
-  { icon: '📊', title: 'One place for all points', text: 'See every purchase and point in your dashboard.' },
-  { icon: '🤝', title: 'Invite friends', text: 'Get your own referral code to share once you join.' },
+  { icon: 'bag', title: 'Earn on every purchase', text: 'Points are credited automatically at partner stores.' },
+  { icon: 'chart', title: 'One place for all points', text: 'See every purchase and point in your dashboard.' },
+  { icon: 'users', title: 'Invite friends', text: 'Get your own referral code to share once you join.' },
 ]
 
 export default function JoinMember() {
@@ -125,10 +126,14 @@ export default function JoinMember() {
     >
       {refCode ? (
         <div className={infoBoxSuccessClass}>
-          🎉 <strong>You were invited!</strong> Complete registration below to claim network member benefits.
+          <Icon name="sparkles" className={inlineIconClass} />
+          <strong>You were invited!</strong> Complete registration below to claim network member benefits.
         </div>
       ) : (
-        <div className={infoBoxClass}>📧 We'll send a 6-digit code to your email to confirm it.</div>
+        <div className={infoBoxClass}>
+          <Icon name="mail" className={inlineIconClass} />
+          We'll send a 6-digit code to your email to confirm it.
+        </div>
       )}
 
       {error && <div className={errorBoxClass}>{error}</div>}
@@ -165,7 +170,7 @@ export default function JoinMember() {
             </button>
           )}
         </div>
-        <div className="mt-1.5 mb-4 min-h-4 text-xs font-semibold text-blue-600">{otpMessage}</div>
+        <div className="mt-1.5 mb-4 min-h-4 text-xs font-semibold text-brand-blue">{otpMessage}</div>
 
         {otpSent && (
           <>
@@ -185,7 +190,7 @@ export default function JoinMember() {
               Didn't get it?{' '}
               <button
                 type="button"
-                className="font-semibold text-blue-600 disabled:text-slate-400"
+                className="font-semibold text-brand-blue disabled:text-slate-400"
                 disabled={resendIn > 0 || sending}
                 onClick={sendOtp}
               >
@@ -248,11 +253,11 @@ export default function JoinMember() {
             required
             checked={agreed}
             onChange={(e) => setAgreed(e.target.checked)}
-            className="mt-0.5 h-4 w-4 shrink-0 accent-blue-600"
+            className="mt-0.5 h-4 w-4 shrink-0 accent-brand-blue"
           />
           <span>
             I agree to the{' '}
-            <Link to="/terms/member" target="_blank" className="font-semibold text-blue-600">
+            <Link to="/terms/member" target="_blank" className="font-semibold text-brand-blue">
               Member Terms &amp; Conditions
             </Link>
             .
@@ -271,13 +276,13 @@ export default function JoinMember() {
       <div className="mt-6 space-y-1.5 border-t border-slate-200 pt-5 text-center text-[13px] text-slate-500">
         <p className="m-0">
           Already a member?{' '}
-          <Link to="/login" className="font-semibold text-blue-600">
+          <Link to="/login" className="font-semibold text-brand-blue">
             Log in
           </Link>
         </p>
         <p className="m-0">
           Own a business?{' '}
-          <Link to="/join/merchant" className="font-semibold text-blue-600">
+          <Link to="/join/merchant" className="font-semibold text-brand-blue">
             Join as Merchant
           </Link>
         </p>
