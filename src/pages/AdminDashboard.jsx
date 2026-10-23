@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
-import { api, formatDate } from '../api'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { api, formatDate, formatTimeIST } from '../api'
 import Layout from '../components/Layout'
 import {
   badgePointsClass,
@@ -49,6 +49,11 @@ export default function AdminDashboard() {
   const [search, setSearch] = useState('')
   const [error, setError] = useState('')
   const [busyId, setBusyId] = useState(null)
+  // App settings (withdrawal fee %); feeDraft is what's typed in the box
+  const [settings, setSettings] = useState(null)
+  const [feeDraft, setFeeDraft] = useState('')
+  const [savingSettings, setSavingSettings] = useState(false)
+  const [settingsSaved, setSettingsSaved] = useState(false)
 
   // Runs an admin API call; logs out if the login has expired
   const adminApi = useCallback(
@@ -70,6 +75,16 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (adminToken) loadStats()
   }, [adminToken, loadStats])
+
+  useEffect(() => {
+    if (!adminToken) return
+    adminApi('/admin/settings')
+      .then((d) => {
+        setSettings(d.settings)
+        setFeeDraft(String(d.settings.withdrawalFeePercent ?? 0))
+      })
+      .catch((err) => setError(err.message))
+  }, [adminToken, adminApi])
 
   useEffect(() => {
     if (!adminToken) return
@@ -114,6 +129,28 @@ export default function AdminDashboard() {
     }
   }
 
+  async function saveSettings(e) {
+    e.preventDefault()
+    setError('')
+    setSettingsSaved(false)
+    const percent = Number(feeDraft)
+    if (feeDraft === '' || !Number.isFinite(percent) || percent < 0 || percent > 100) {
+      setError('Withdrawal fee must be between 0% and 100%.')
+      return
+    }
+    setSavingSettings(true)
+    try {
+      const d = await adminApi('/admin/settings', { method: 'PATCH', body: { withdrawalFeePercent: percent } })
+      setSettings(d.settings)
+      setFeeDraft(String(d.settings.withdrawalFeePercent))
+      setSettingsSaved(true)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSavingSettings(false)
+    }
+  }
+
   function handleLogout() {
     signOutAdmin()
     navigate('/')
@@ -151,6 +188,9 @@ export default function AdminDashboard() {
         <button className={tabClass(tab === 'members')} onClick={() => setTab('members')}>
           Members
         </button>
+        <button className={tabClass(tab === 'settings')} onClick={() => setTab('settings')}>
+          Settings
+        </button>
       </div>
 
       {tab === 'merchants' ? (
@@ -180,8 +220,8 @@ export default function AdminDashboard() {
                 <tr>
                   <th className={thClass}>Business</th>
                   <th className={thClass}>Category</th>
-                  <th className={thClass}>Contact</th>
                   <th className={thClass}>Applied</th>
+                  <th className={`${thClass} text-right`}>Wallet Points</th>
                   <th className={thClass}>Status</th>
                   <th className={`${thClass} text-right`}>Action</th>
                 </tr>
@@ -198,28 +238,31 @@ export default function AdminDashboard() {
                     <tr key={m._id}>
                       <td className={tdClass}>
                         <span className="block font-bold text-slate-900">{m.businessName}</span>
-                        <span className="text-xs text-slate-500">
+                        {m.merchantId && (
+                          <span className="block font-mono text-xs font-bold tracking-wider text-indigo-600">
+                            {m.merchantId}
+                          </span>
+                        )}
+                        <span className="block text-xs text-slate-500">
                           {m.ownerName}
                           {m.city ? ` · ${m.city}` : ''}
                         </span>
-                        {m.googleBusinessLink && (
-                          <a
-                            href={m.googleBusinessLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block text-xs font-semibold text-blue-600 hover:underline"
-                          >
-                            Google Business ↗
-                          </a>
-                        )}
+                        <Link
+                          to={`/admin/merchants/${m._id}`}
+                          className="mt-1 inline-block text-xs font-semibold text-indigo-600 hover:underline"
+                        >
+                          View Profile →
+                        </Link>
                       </td>
                       <td className={`${tdClass} text-slate-600`}>{m.category}</td>
-                      <td className={`${tdClass} text-xs text-slate-600`}>
-                        {m.email}
-                        <br />
-                        {m.mobile}
+                      <td className={`${tdClass} text-slate-500 whitespace-nowrap`}>
+                        {formatDate(m.createdAt)}
+                        <span className="block text-xs">{formatTimeIST(m.createdAt)}</span>
                       </td>
-                      <td className={`${tdClass} text-slate-500`}>{formatDate(m.createdAt)}</td>
+                      <td className={`${tdClass} text-right whitespace-nowrap`}>
+                        <span className={badgePointsClass}>{(m.walletBalance ?? 0).toLocaleString('en-IN')} pts</span>
+                        <span className="mt-1 block text-xs text-slate-500">{m.discountPercent ?? 10}% discount</span>
+                      </td>
                       <td className={tdClass}>
                         <span className={`rounded-md px-2 py-1 text-xs font-bold capitalize ${statusBadge[m.status]}`}>
                           {m.status}
@@ -252,7 +295,7 @@ export default function AdminDashboard() {
             </table>
           </div>
         </>
-      ) : (
+      ) : tab === 'members' ? (
         <>
           <input
             type="search"
@@ -284,13 +327,20 @@ export default function AdminDashboard() {
                   members.map((m) => (
                     <tr key={m._id}>
                       <td className={tdClass}>
-                        <span className="block font-bold text-slate-900">{m.name}</span>
+                        <span className="block font-bold text-slate-900">
+                          {m.name || <span className="font-normal italic text-slate-400">No name yet</span>}
+                        </span>
                         <span className="text-xs text-slate-500">Joined {formatDate(m.createdAt)}</span>
                       </td>
                       <td className={`${tdClass} text-xs text-slate-600`}>
                         {m.email}
                         <br />
                         {m.mobile}
+                        {(m.address || m.pincode) && (
+                          <span className="block text-xs text-slate-500">
+                            {[m.address, m.pincode].filter(Boolean).join(' – ')}
+                          </span>
+                        )}
                       </td>
                       <td className={`${tdClass} font-mono text-xs`}>{m.referralCode}</td>
                       <td className={`${tdClass} font-mono text-xs text-slate-500`}>{m.referredBy}</td>
@@ -305,6 +355,36 @@ export default function AdminDashboard() {
             </table>
           </div>
         </>
+      ) : (
+        <div className="max-w-lg rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <h4 className="mt-0 mb-1 font-semibold text-slate-700">💸 Merchant Withdrawal Fee</h4>
+          <p className="mt-0 mb-3 text-[13px] text-slate-500">
+            % kept from every merchant withdrawal. At {settings?.withdrawalFeePercent ?? 0}%, withdrawing 1,000 points
+            sends ₹{(1000 - (1000 * (settings?.withdrawalFeePercent ?? 0)) / 100).toLocaleString('en-IN')} to their bank.
+            Changes apply to new withdrawals only.
+          </p>
+          {settingsSaved && (
+            <div className={`${infoBoxAdminClass} mb-3`}>✅ Withdrawal fee set to {settings.withdrawalFeePercent}%.</div>
+          )}
+          <form onSubmit={saveSettings} className="flex items-stretch gap-2">
+            <input
+              type="number"
+              inputMode="decimal"
+              min="0"
+              max="100"
+              step="0.01"
+              value={feeDraft}
+              onChange={(e) => {
+                setFeeDraft(e.target.value)
+                setSettingsSaved(false)
+              }}
+              className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
+            />
+            <button type="submit" className={`${btnBase} bg-indigo-600 text-white whitespace-nowrap`} disabled={savingSettings}>
+              {savingSettings ? 'Saving…' : 'Save'}
+            </button>
+          </form>
+        </div>
       )}
     </Layout>
   )

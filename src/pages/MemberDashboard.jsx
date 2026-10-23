@@ -2,7 +2,16 @@ import { useEffect, useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { api, formatDate } from '../api'
 import Layout from '../components/Layout'
-import { badgePointsClass, btnSecondary, errorBoxClass, inputClass, tdClass, thClass } from '../components/ui'
+import {
+  badgePointsClass,
+  btnPrimary,
+  btnSecondary,
+  errorBoxClass,
+  inputClass,
+  labelClass,
+  tdClass,
+  thClass,
+} from '../components/ui'
 import { useAuth } from '../store/auth'
 
 const shareBtnClass =
@@ -41,6 +50,9 @@ export default function MemberDashboard() {
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [copied, setCopied] = useState(false)
+  // Editing the name; null = not editing. Members a merchant added by email start with no name.
+  const [nameDraft, setNameDraft] = useState(null)
+  const [savingName, setSavingName] = useState(false)
 
   useEffect(() => {
     if (!memberToken) return
@@ -96,6 +108,26 @@ Meet ALEOS — India's zero-cost customer growth app for retail shops!
     navigate('/')
   }
 
+  async function saveName(e) {
+    e.preventDefault()
+    setError('')
+    if (!nameDraft.trim()) {
+      setError('Please enter your name.')
+      return
+    }
+    setSavingName(true)
+    try {
+      const res = await api('/members/me', { method: 'PATCH', token: memberToken, body: { name: nameDraft.trim() } })
+      setData((d) => ({ ...d, member: res.member }))
+      setNameDraft(null)
+    } catch (err) {
+      if (err.status === 401) signOutMember()
+      else setError(err.message)
+    } finally {
+      setSavingName(false)
+    }
+  }
+
   async function copyText(text, which) {
     try {
       await navigator.clipboard.writeText(text)
@@ -110,9 +142,24 @@ Meet ALEOS — India's zero-cost customer growth app for retail shops!
     <Layout>
       <div className="mb-4 flex items-start justify-between">
         <div>
-          <h2 className="m-0 text-xl font-semibold text-slate-900">Welcome, {member.name}!</h2>
+          <h2 className="m-0 text-xl font-semibold text-slate-900">
+            {member.name ? `Welcome, ${member.name}!` : 'Welcome!'}
+          </h2>
           <div className="mt-0.5 text-[13px] text-slate-500">
-            {member.email} · +91 {member.mobile}
+            {member.email}
+            {member.mobile && ` · +91 ${member.mobile}`}
+            {member.name && nameDraft === null && (
+              <>
+                {' · '}
+                <button
+                  type="button"
+                  className="font-semibold text-blue-600 hover:underline"
+                  onClick={() => setNameDraft(member.name)}
+                >
+                  Edit name
+                </button>
+              </>
+            )}
           </div>
         </div>
         <button className={`${btnSecondary} px-3 py-1.5 text-xs`} onClick={handleLogout}>
@@ -121,6 +168,29 @@ Meet ALEOS — India's zero-cost customer growth app for retail shops!
       </div>
 
       {error && <div className={errorBoxClass}>{error}</div>}
+
+      {(!member.name || nameDraft !== null) && (
+        <form onSubmit={saveName} className="mb-5 rounded-xl border border-blue-200 bg-blue-50 p-4">
+          <label className={labelClass}>{member.name ? 'Your Name' : '👋 Add your name to complete your account'}</label>
+          <div className="flex items-stretch gap-2">
+            <input
+              type="text"
+              placeholder="John Doe"
+              value={nameDraft ?? ''}
+              onChange={(e) => setNameDraft(e.target.value)}
+              className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
+            />
+            <button type="submit" className={`${btnPrimary} whitespace-nowrap`} disabled={savingName}>
+              {savingName ? 'Saving…' : 'Save'}
+            </button>
+            {member.name && (
+              <button type="button" className={`${btnSecondary} whitespace-nowrap`} onClick={() => setNameDraft(null)}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      )}
 
       <div className="mb-5 grid grid-cols-2 gap-3">
         <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-center">

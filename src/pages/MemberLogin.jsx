@@ -72,7 +72,7 @@ export default function MemberLogin() {
 
       <form onSubmit={handleSubmit}>
         <label className={labelClass}>Email ID</label>
-        <div className="mb-1.5 flex items-center gap-2">
+        <div className="mb-1.5 flex items-stretch gap-2">
           <input
             type="email"
             placeholder="you@example.com"
@@ -80,7 +80,8 @@ export default function MemberLogin() {
             value={email}
             disabled={otpSent}
             onChange={(e) => setEmail(e.target.value)}
-            className={`${inputClass} mb-0`}
+            // inputClass carries mb-4, which beats a trailing mb-0 and pushes the input above the button
+            className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
           />
           {otpSent ? (
             <button

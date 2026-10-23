@@ -27,5 +27,17 @@ export async function api(path, { method = 'GET', body, token } = {}) {
 }
 
 export function formatDate(value) {
-  return new Date(value).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+  // IST so the date always matches formatTimeIST, even for someone viewing from another time zone
+  return new Date(value).toLocaleDateString('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+// Time in Indian Standard Time whatever the viewer's own time zone is, e.g. "3:45 pm IST"
+export function formatTimeIST(value) {
+  const time = new Date(value).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' })
+  return `${time} IST`
 }

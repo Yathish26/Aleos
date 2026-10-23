@@ -30,6 +30,8 @@ export default function JoinMember() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [mobile, setMobile] = useState('')
+  const [address, setAddress] = useState('')
+  const [pincode, setPincode] = useState('')
   const [referralCode, setReferralCode] = useState(refCode)
   const [otp, setOtp] = useState('')
   const [agreed, setAgreed] = useState(false)
@@ -87,11 +89,23 @@ export default function JoinMember() {
       setError('Please enter a valid 10-digit mobile number.')
       return
     }
+    if (!/^\d{6}$/.test(pincode)) {
+      setError('Please enter a valid 6-digit pincode.')
+      return
+    }
     setJoining(true)
     try {
       const data = await api('/auth/member/join', {
         method: 'POST',
-        body: { name: name.trim(), email: email.trim(), mobile, referralCode: referralCode.trim(), otp: otp.trim() },
+        body: {
+          name: name.trim(),
+          email: email.trim(),
+          mobile,
+          address: address.trim(),
+          pincode,
+          referralCode: referralCode.trim(),
+          otp: otp.trim(),
+        },
       })
       signInMember(data.token)
       navigate('/dashboard')
@@ -193,10 +207,34 @@ export default function JoinMember() {
           className={inputClass}
         />
 
+        <label className={labelClass}>Address *</label>
+        <input
+          type="text"
+          placeholder="House no., street, area, city"
+          autoComplete="street-address"
+          required
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          className={inputClass}
+        />
+
+        <label className={labelClass}>Pincode *</label>
+        <input
+          type="text"
+          inputMode="numeric"
+          autoComplete="postal-code"
+          placeholder="560001"
+          maxLength={6}
+          required
+          value={pincode}
+          onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+          className={inputClass}
+        />
+
         <label className={labelClass}>Referral Code *</label>
         <input
           type="text"
-          placeholder="e.g. ALE7K3QX"
+          placeholder="From a member (ALE…) or a shop (ALM…)"
           required
           value={referralCode}
           readOnly={!!refCode}
