@@ -1,11 +1,8 @@
 import { useState } from 'react'
 import { Link, NavLink, useLocation } from 'react-router-dom'
 import { useAuth } from '../store/auth'
+import { APP_VERSION } from '../version'
 import { containerClass } from './ui'
-
-// Filled in by vite.config.js on every build (the git commit count)
-const APP_VERSION = import.meta.env.VITE_APP_VERSION || 'dev'
-const APP_BUILT_AT = import.meta.env.VITE_APP_BUILT_AT || ''
 
 // Full-width site frame: sticky header (with a menu button on mobile), page content, footer.
 // Pages get a padded, centered content area by default; pass `bare` to draw full-width sections yourself.
@@ -101,15 +98,13 @@ export default function Layout({ children, bare = false }) {
         >
           <span className="flex flex-col items-center gap-0.5 sm:items-start">
             <span>© {new Date().getFullYear()} ALEOS Rewards Network</span>
-            {/* Set at build time from the git commit count — see vite.config.js */}
-            <span
-              className="font-mono text-[11px] text-slate-400"
-              title={APP_BUILT_AT ? `Built ${new Date(APP_BUILT_AT).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST` : undefined}
-            >
-              v{APP_VERSION}
-            </span>
+            {/* Set by hand in src/version.js */}
+            <span className="font-mono text-[11px] text-slate-400">v{APP_VERSION}</span>
           </span>
           <div className="flex flex-wrap justify-center gap-x-4 gap-y-1">
+            <Link to="/about" className="hover:text-slate-800">
+              About Us
+            </Link>
             <Link to="/join/member" className="hover:text-slate-800">
               Become a member
             </Link>

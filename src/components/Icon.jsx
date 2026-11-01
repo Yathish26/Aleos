@@ -164,6 +164,19 @@ const paths = {
       <circle cx="12" cy="10" r="3" />
     </>
   ),
+  eye: (
+    <>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  target: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </>
+  ),
   chevronDown: <path d="m6 9 6 6 6-6" />,
   arrowRight: <path d="M5 12h14M12 5l7 7-7 7" />,
 

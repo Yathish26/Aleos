@@ -74,6 +74,19 @@ const iconPaths = {
       <path d="M16 7h6v6" />
     </>
   ),
+  eye: (
+    <>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  target: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </>
+  ),
 }
 
 function Icon({ name, className = 'h-6 w-6', strokeWidth = 2 }) {
@@ -139,6 +152,19 @@ const benefits = [
     text: 'When you invite friends, you earn a % bonus on their purchases!',
   },
   { icon: 'trending', title: 'Grow with your city', text: 'More shops join every week — more places to earn and spend.' },
+]
+
+const purpose = [
+  {
+    icon: 'eye',
+    title: 'Our vision',
+    text: 'To create a fully connected hyperlocal commerce ecosystem where every neighborhood business thrives digitally and every consumer can instantly discover and support local commerce.',
+  },
+  {
+    icon: 'target',
+    title: 'Our mission',
+    text: 'To empower local retailers, service providers, and regional distributors with low-friction, automated digital tools and a cost-effective platform that seamlessly connects them with nearby consumers and trade partners.',
+  },
 ]
 
 const memberPerks = [
@@ -298,14 +324,17 @@ export default function Home() {
   return (
     <Layout bare>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-brand-navy text-white">
-        {/* Soft brand glows */}
-        <div className="pointer-events-none absolute -top-32 -right-24 h-96 w-96 rounded-full bg-brand-blue/40 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-brand-cyan/25 blur-3xl" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_0)] bg-size-[24px_24px]" />
+      <section className="relative bg-brand-navy text-white">
+        {/* Soft brand glows — clipped here, not on the section, so the Join menu can open past the hero */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -top-32 -right-24 h-96 w-96 rounded-full bg-brand-blue/40 blur-3xl" />
+          <div className="absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-brand-cyan/25 blur-3xl" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_0)] bg-size-[24px_24px]" />
+        </div>
 
+        {/* z-20 keeps the open Join menu above the points strip (z-10) below */}
         <div
-          className={`${containerClass} relative grid items-center gap-10 pt-10 pb-20 sm:gap-12 sm:py-20 lg:grid-cols-2 lg:py-28`}
+          className={`${containerClass} relative z-20 grid items-center gap-10 pt-10 pb-20 sm:gap-12 sm:py-20 lg:grid-cols-2 lg:py-28`}
         >
           {/* Centred on phones, left-aligned from tablets up */}
           <div className="text-center sm:text-left">
@@ -477,8 +506,29 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Vision & mission */}
+      <section className="bg-brand-light/60">
+        <div className={`${containerClass} py-14 sm:py-24`}>
+          <SectionHeading eyebrow="Our purpose" title="Why we're building ALEOS" />
+
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2">
+            {purpose.map((p) => (
+              <div key={p.title} className="rounded-3xl border border-white bg-white p-5 shadow-sm sm:p-9">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-navy text-brand-cyan shadow-lg shadow-brand-navy/25 sm:mb-5 sm:h-14 sm:w-14">
+                  <Icon name={p.icon} className="h-6 w-6 sm:h-7 sm:w-7" />
+                </div>
+                <h3 className="m-0 mb-2 text-xl font-extrabold tracking-tight text-brand-navy sm:mb-3 sm:text-2xl">
+                  {p.title}
+                </h3>
+                <p className="m-0 text-sm leading-relaxed text-slate-600 sm:text-base">{p.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Closing call to action */}
-      <section className="px-4 pb-14 sm:pb-24">
+      <section className="px-4 py-14 sm:py-24">
         <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-linear-to-r from-brand-navy via-[#123f8a] to-brand-blue px-5 py-10 text-center text-white sm:px-12 sm:py-16">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-size-[22px_22px]" />
           <div className="relative">

@@ -15,6 +15,11 @@ const DEFAULT = {
 // kept out of search results with "noindex".
 const PAGES = {
   '/': DEFAULT,
+  '/about': {
+    title: `About Us | ${SITE_NAME}`,
+    description:
+      'ALEOS is a hyperlocal digital platform bridging neighborhood commerce and modern digital convenience — a level digital playing field for local stores, service providers and distributors.',
+  },
   '/join/member': {
     title: `Join as a Member – Earn Points on Every Purchase | ${SITE_NAME}`,
     description:

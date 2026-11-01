@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router-dom'
 import Seo from './components/Seo'
 import Home from './pages/Home'
+import About from './pages/About'
 import JoinMember from './pages/JoinMember'
 import JoinMerchant from './pages/JoinMerchant'
 import MemberLogin from './pages/MemberLogin'
@@ -22,6 +23,7 @@ function App() {
       <Seo />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
         <Route path="/join/member" element={<JoinMember />} />
         <Route path="/join/merchant" element={<JoinMerchant />} />
         <Route path="/login" element={<MemberLogin />} />
