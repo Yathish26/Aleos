@@ -70,6 +70,16 @@ export default function AdminDashboard() {
   const [memberPage, setMemberPage] = useState(1)
   const [memberPaging, setMemberPaging] = useState(null)
   const [loadingMembers, setLoadingMembers] = useState(false)
+  // Sales team: list (paged like the others) and the "add sales person" form
+  const [salesPersons, setSalesPersons] = useState([])
+  const [salesSearch, setSalesSearch] = useState('')
+  const [salesPage, setSalesPage] = useState(1)
+  const [salesPaging, setSalesPaging] = useState(null)
+  const [salesVersion, setSalesVersion] = useState(0) // bump to reload the current page
+  const [loadingSales, setLoadingSales] = useState(false)
+  const [salesForm, setSalesForm] = useState({ name: '', mobile: '' })
+  const [savingSales, setSavingSales] = useState(false)
+  const [salesAdded, setSalesAdded] = useState('')
 
   // Runs an admin API call; logs out if the login has expired
   const adminApi = useCallback(
@@ -159,6 +169,33 @@ export default function AdminDashboard() {
     }
   }, [adminToken, adminApi, search, memberPage])
 
+  useEffect(() => {
+    if (!adminToken || tab !== 'sales') return
+    let cancelled = false
+    // Small delay so we don't search on every keystroke
+    const timer = setTimeout(() => {
+      const query = salesSearch.trim() ? `&search=${encodeURIComponent(salesSearch.trim())}` : ''
+      setLoadingSales(true)
+      adminApi(`/admin/sales-persons?page=${salesPage}&limit=${PAGE_SIZE}${query}`)
+        .then((d) => {
+          if (cancelled) return
+          // The last person on a page was removed — step back to the page before
+          if (d.salesPersons.length === 0 && salesPage > 1) {
+            setSalesPage(salesPage - 1)
+            return
+          }
+          setSalesPersons(d.salesPersons)
+          setSalesPaging(d)
+        })
+        .catch((err) => !cancelled && setError(err.message))
+        .finally(() => !cancelled && setLoadingSales(false))
+    }, 300)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [adminToken, adminApi, tab, salesSearch, salesPage, salesVersion])
+
   if (!adminToken) {
     return <Navigate to="/admin" replace />
   }
@@ -225,6 +262,50 @@ export default function AdminDashboard() {
     }
   }
 
+  async function addSalesPerson(e) {
+    e.preventDefault()
+    setError('')
+    setSalesAdded('')
+    const name = salesForm.name.trim()
+    const mobile = salesForm.mobile.replace(/\D/g, '')
+    if (!name) {
+      setError('Enter the sales person’s name.')
+      return
+    }
+    if (!/^\d{10}$/.test(mobile)) {
+      setError('Mobile must be a 10-digit number.')
+      return
+    }
+    setSavingSales(true)
+    try {
+      const d = await adminApi('/admin/sales-persons', { method: 'POST', body: { name, mobile } })
+      setSalesForm({ name: '', mobile: '' })
+      setSalesAdded(d.salesPerson.name)
+      // Newest first, so show page 1 to see them
+      setSalesPage(1)
+      setSalesVersion((v) => v + 1)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSavingSales(false)
+    }
+  }
+
+  async function removeSalesPerson(person) {
+    if (!window.confirm(`Remove ${person.name} (${person.mobile}) from the sales team?`)) return
+    setError('')
+    setSalesAdded('')
+    setBusyId(person._id)
+    try {
+      await adminApi(`/admin/sales-persons/${person._id}`, { method: 'DELETE' })
+      setSalesVersion((v) => v + 1)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   function handleLogout() {
     signOutAdmin()
     navigate('/')
@@ -256,7 +337,7 @@ export default function AdminDashboard() {
         <StatTile label="Pending Approval" value={stats?.pendingMerchants ?? '–'} tone="amber" />
       </div>
 
-      <div className="mb-4 flex gap-2">
+      <div className="mb-4 flex flex-wrap gap-2">
         <button className={tabClass(tab === 'merchants')} onClick={() => setTab('merchants')}>
           Merchants {stats?.pendingMerchants ? `(${stats.pendingMerchants} pending)` : ''}
         </button>
@@ -268,6 +349,9 @@ export default function AdminDashboard() {
         </button>
         <button className={tabClass(tab === 'settings')} onClick={() => setTab('settings')}>
           Settings
+        </button>
+        <button className={tabClass(tab === 'sales')} onClick={() => setTab('sales')}>
+          Sales
         </button>
       </div>
 
@@ -535,6 +619,118 @@ export default function AdminDashboard() {
             </>
           )}
         </div>
+      ) : tab === 'sales' ? (
+        <>
+          <div className="mb-5 max-w-2xl rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <PanelTitle icon="users" className="mt-0 mb-1">
+              Add Sales Person
+            </PanelTitle>
+            <p className="mt-0 mb-3 text-[13px] text-slate-500">Register a member of the ALEOS sales team.</p>
+            {salesAdded && (
+              <div className={`${infoBoxAdminClass} mb-3`}>
+                <Icon name="checkCircle" className={inlineIconClass} />
+                {salesAdded} added to the sales team.
+              </div>
+            )}
+            <form onSubmit={addSalesPerson} className="flex flex-col gap-2 sm:flex-row sm:items-stretch">
+              <input
+                type="text"
+                placeholder="Full name"
+                maxLength={100}
+                value={salesForm.name}
+                onChange={(e) => setSalesForm((f) => ({ ...f, name: e.target.value }))}
+                className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
+              />
+              <input
+                type="tel"
+                inputMode="numeric"
+                placeholder="10-digit mobile"
+                maxLength={10}
+                value={salesForm.mobile}
+                onChange={(e) => setSalesForm((f) => ({ ...f, mobile: e.target.value.replace(/\D/g, '') }))}
+                className={`${inputClass.replace('mb-4 ', '')} min-w-0 sm:w-44`}
+              />
+              <button
+                type="submit"
+                className={`${btnBase} bg-brand-navy text-white whitespace-nowrap`}
+                disabled={savingSales}
+              >
+                {savingSales ? 'Adding…' : 'Add'}
+              </button>
+            </form>
+          </div>
+
+          <input
+            type="search"
+            placeholder="Search by name or mobile"
+            value={salesSearch}
+            onChange={(e) => {
+              setSalesSearch(e.target.value)
+              setSalesPage(1)
+            }}
+            className={inputClass}
+          />
+          <div className={`overflow-x-auto transition-opacity ${loadingSales ? 'opacity-50' : ''}`}>
+            <table className="w-full border-collapse text-left text-[13px]">
+              <thead>
+                <tr>
+                  <th className={thClass}>Name</th>
+                  <th className={thClass}>Mobile</th>
+                  <th className={thClass}>Added</th>
+                  <th className={`${thClass} text-right`}>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {salesPersons.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-2.5 py-5 text-center text-slate-500">
+                      {loadingSales
+                        ? 'Loading…'
+                        : salesSearch.trim()
+                          ? `No sales persons match “${salesSearch.trim()}”.`
+                          : 'No sales persons yet.'}
+                    </td>
+                  </tr>
+                ) : (
+                  salesPersons.map((p) => (
+                    <tr key={p._id}>
+                      <td className={`${tdClass} font-bold text-slate-900`}>{p.name}</td>
+                      <td className={`${tdClass} text-slate-600`}>
+                        <a href={`tel:${p.mobile}`} className="hover:underline">
+                          {p.mobile}
+                        </a>
+                      </td>
+                      <td className={`${tdClass} text-slate-500 whitespace-nowrap`}>
+                        {formatDate(p.createdAt)}
+                        <span className="block text-xs">{formatTimeIST(p.createdAt)}</span>
+                      </td>
+                      <td className={`${tdClass} text-right`}>
+                        <button
+                          className={`${btnBase} bg-red-100 px-2.5 py-1 text-xs text-red-700`}
+                          disabled={busyId === p._id}
+                          onClick={() => removeSalesPerson(p)}
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          {salesPaging && (
+            <Pagination
+              label="Sales person list pages"
+              page={salesPaging.page}
+              totalPages={salesPaging.totalPages}
+              total={salesPaging.total}
+              limit={salesPaging.limit}
+              disabled={loadingSales}
+              onChange={setSalesPage}
+            />
+          )}
+        </>
       ) : (
         <div className="max-w-lg rounded-xl border border-slate-200 bg-slate-50 p-4">
           <PanelTitle icon="banknote" className="mt-0 mb-1">

@@ -130,13 +130,6 @@ const steps = [
   { icon: 'gift', title: 'Collect points', text: 'Points land in your account automatically with every purchase.' },
 ]
 
-// How every bill's points are shared
-const split = [
-  { value: '80%', label: 'goes to you', text: 'of the points on every bill', tone: 'text-brand-cyan' },
-  { value: '10%', label: 'to your referrer', text: 'the friend or shop that invited you', tone: 'text-brand-blue' },
-  { value: '₹0', label: 'to join', text: 'free for members, always', tone: 'text-white' },
-]
-
 const benefits = [
   { icon: 'zap', title: 'Free & instant setup', text: 'Takes less than 2 minutes on your phone.' },
   {
@@ -180,9 +173,21 @@ const merchantPerks = [
 
 // Example activity shown on the hero card (illustration only)
 const sampleActivity = [
-  { emoji: '☕', shop: 'Artisan Cafe', note: '₹1,000 bill', points: '+80' },
-  { emoji: '💇', shop: 'Glow Salon', note: '₹600 bill', points: '+48' },
-  { emoji: '🤝', shop: 'Referral bonus', note: 'A friend shopped', points: '+10' },
+  { emoji: '🥞', shop: 'Sri Ganesh Upahara', note: 'Tiffin · Moodbidri', points: '+40' },
+  { emoji: '☕', shop: 'Kambada Cafe', note: 'Cafe · Moodbidri', points: '+20' },
+  { emoji: '🛍️', shop: 'Vaishnavi Silks', note: 'Sarees · Moodbidri', points: '+160' },
+]
+
+// Placeholder partner businesses for the showcase section (dummy names)
+const partners = [
+  { emoji: '🥞', name: 'Sri Ganesh Upahara', category: 'South Indian', area: 'Jain Pete, Moodbidri' },
+  { emoji: '☕', name: 'Kambada Cafe', category: 'Cafe', area: 'Main Road, Moodbidri' },
+  { emoji: '🐟', name: 'Karavali Fish Thali', category: 'Mangalorean', area: 'Alangar, Moodbidri' },
+  { emoji: '🥥', name: 'Neer Dosa Corner', category: 'South Indian', area: 'Kotebagilu, Moodbidri' },
+  { emoji: '🍛', name: 'Tulunadu Family Restaurant', category: 'Restaurant', area: 'Bus Stand Road, Moodbidri' },
+  { emoji: '🫖', name: 'Goli Baje Chai Point', category: 'Cafe', area: 'Mijar, Moodbidri' },
+  { emoji: '🍚', name: 'Shree Durga Veg Meals', category: 'Udupi Meals', area: 'Hosabettu, Moodbidri' },
+  { emoji: '🍨', name: 'Mangala Ice Cream Parlour', category: 'Desserts', area: 'Belvai, Moodbidri' },
 ]
 
 function JoinDropdown() {
@@ -332,9 +337,9 @@ export default function Home() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_0)] bg-size-[24px_24px]" />
         </div>
 
-        {/* z-20 keeps the open Join menu above the points strip (z-10) below */}
+        {/* z-20 keeps the open Join menu above the sections below */}
         <div
-          className={`${containerClass} relative z-20 grid items-center gap-10 pt-10 pb-20 sm:gap-12 sm:py-20 lg:grid-cols-2 lg:py-28`}
+          className={`${containerClass} relative z-20 grid items-center gap-10 pt-10 pb-14 sm:gap-12 sm:py-20 lg:grid-cols-2 lg:py-28`}
         >
           {/* Centred on phones, left-aligned from tablets up */}
           <div className="text-center sm:text-left">
@@ -384,20 +389,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* How the points are shared */}
-      {/* A compact row of three on phones too, instead of three tall stacked boxes */}
-      <section className="relative z-10 -mt-10 px-4 sm:-mt-12">
-        <div className="mx-auto grid max-w-5xl grid-cols-3 gap-px overflow-hidden rounded-2xl bg-white/10 shadow-xl shadow-brand-navy/20 sm:rounded-3xl">
-          {split.map((s) => (
-            <div key={s.label} className="bg-linear-to-br from-brand-navy to-[#123f8a] px-2 py-4 text-center sm:px-6 sm:py-7">
-              <div className={`font-display text-2xl font-extrabold sm:text-4xl ${s.tone}`}>{s.value}</div>
-              <div className="mt-0.5 text-xs font-semibold text-white sm:mt-1 sm:text-base">{s.label}</div>
-              <div className="mt-0.5 hidden text-[13px] text-blue-100/70 sm:block">{s.text}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
       {/* How it works */}
       <section className={`${containerClass} py-14 sm:py-24`}>
         <SectionHeading eyebrow="How it works" title="Three simple steps to start earning" />
@@ -421,6 +412,36 @@ export default function Home() {
                 <h3 className="m-0 mb-1 text-base font-bold text-brand-navy sm:mb-2 sm:text-lg">{step.title}</h3>
                 <p className="m-0 text-sm leading-relaxed text-slate-500 sm:text-[15px]">{step.text}</p>
               </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Partner businesses */}
+      <section className={`${containerClass} pb-14 sm:pb-24`}>
+        <SectionHeading
+          eyebrow="Our partners"
+          title="Earn points at places you already love"
+          text="Cafes, tiffin centres and restaurants across Moodbidri are already part of ALEOS."
+        />
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+          {partners.map((p) => (
+            <div
+              key={p.name}
+              className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-blue/10 sm:rounded-3xl sm:p-5"
+            >
+              <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-light text-xl sm:mb-4 sm:h-12 sm:w-12 sm:text-2xl">
+                {p.emoji}
+              </span>
+              <h3 className="m-0 mb-1 text-sm leading-snug font-bold text-brand-navy sm:text-base">{p.name}</h3>
+              <div className="flex items-center gap-1 text-xs text-slate-500 sm:text-[13px]">
+                <Icon name="mapPin" className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{p.area}</span>
+              </div>
+              <span className="mt-3 inline-block rounded-full bg-brand-light px-2.5 py-0.5 text-[11px] font-semibold text-brand-blue sm:text-xs">
+                {p.category}
+              </span>
             </div>
           ))}
         </div>

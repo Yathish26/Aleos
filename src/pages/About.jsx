@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout'
 import Icon from '../components/Icon'
@@ -24,6 +25,11 @@ const purpose = [
 ]
 
 export default function About() {
+  // Open the page at the top instead of keeping the previous page's scroll position
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [])
+
   return (
     <Layout bare>
       {/* Header */}
