@@ -171,6 +171,12 @@ const merchantPerks = [
   'Pick your category and apply in minutes',
 ]
 
+// Network totals shown on the hero card (dummy numbers for now)
+const networkStats = [
+  { icon: 'store', value: '137', label: 'Merchants onboarded' },
+  { icon: 'user', value: '4,862', label: 'Customers registered' },
+]
+
 // Example activity shown on the hero card (illustration only)
 const sampleActivity = [
   { emoji: '🥞', shop: 'Sri Ganesh Upahara', note: 'Tiffin · Moodbidri', points: '+40' },
@@ -285,22 +291,26 @@ function SectionHeading({ eyebrow, title, text }) {
   )
 }
 
-// Decorative preview of a member's points (not real data)
+// Decorative hero card: network totals + sample activity (not real data)
 function HeroCard() {
   return (
-    <div className="relative mx-auto w-full max-w-sm" aria-hidden="true">
+    <div className="relative mx-auto w-full max-w-sm">
       <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-brand-cyan/40 to-brand-blue/40 blur-2xl" />
       <div className="relative rounded-3xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
-        <div className="mb-4 flex items-center justify-between sm:mb-5">
-          <div>
-            <div className="text-xs font-semibold tracking-wide text-blue-100/80 uppercase">Your points</div>
-            <div className="font-display text-3xl font-extrabold text-white sm:text-4xl">1,250</div>
-          </div>
-          <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-cyan text-brand-navy">
-            <Icon name="gift" className="h-6 w-6" />
-          </span>
+        <div className="mb-4 grid grid-cols-2 gap-2.5 sm:mb-5 sm:gap-3">
+          {networkStats.map((s) => (
+            <div key={s.label} className="rounded-2xl border border-white/10 bg-white/10 p-3 sm:p-4">
+              <span className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-cyan text-brand-navy">
+                <Icon name={s.icon} className="h-5 w-5" />
+              </span>
+              <div className="font-display text-2xl font-extrabold text-white sm:text-3xl">{s.value}</div>
+              <div className="text-[11px] leading-snug font-semibold tracking-wide text-blue-100/80 uppercase sm:text-xs">
+                {s.label}
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="space-y-2.5">
+        <div className="space-y-2.5" aria-hidden="true">
           {sampleActivity.map((a) => (
             <div key={a.shop} className="flex items-center gap-3 rounded-2xl bg-white/95 px-3 py-2.5 sm:px-3.5 sm:py-3">
               <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-lg">{a.emoji}</span>

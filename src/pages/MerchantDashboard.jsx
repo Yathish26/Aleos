@@ -357,8 +357,8 @@ export default function MerchantDashboard() {
       setWithdrawError(
         withdrawMax === 0
           ? withdrawLeftToday === 0
-            ? `You've reached today's limit of ${pts(dailyWithdrawalLimit)}.`
-            : 'No points in your wallet to withdraw.'
+            ? `You've reached today's settlement limit of ${pts(dailyWithdrawalLimit)}.`
+            : 'No promotional credits available to settle.'
           : `Enter a whole number of points from 1 to ${withdrawMax.toLocaleString('en-IN')}.`,
       )
       return
@@ -393,7 +393,7 @@ export default function MerchantDashboard() {
     setRechargeError('')
     setRecharged(null)
     if (!rechargeValid) {
-      setRechargeError(`Recharge must be a whole amount of at least ${rupees(MIN_RECHARGE)}.`)
+      setRechargeError(`Campaign quota top-up must be a whole amount of at least ${rupees(MIN_RECHARGE)}.`)
       return
     }
     setRecharging(true)
@@ -449,12 +449,13 @@ export default function MerchantDashboard() {
 
       <div className="mb-5 rounded-2xl border border-brand-blue/30 bg-brand-light p-4">
         <div className="flex items-center gap-1.5 text-xs font-bold uppercase text-brand-navy">
-          <Icon name="wallet" className="h-4 w-4" />
-          Wallet Points
+          <Icon name="coins" className="h-4 w-4" />
+          Available Promotional Credits
         </div>
         <div className="text-3xl font-extrabold text-brand-navy">{pts(walletBalance)}</div>
         <div className="mt-0.5 text-xs text-brand-navy/70">
-          Points you can still give to members. ₹1 recharge = 1 point, plus a {FEE_PERCENT} convenience fee.
+          Credits you can issue to members as reward points. Each ₹1 of campaign quota = 1 credit, plus a{' '}
+          {FEE_PERCENT} convenience fee.
         </div>
 
         <form onSubmit={handleRecharge} className="mt-4 border-t border-brand-blue/30 pt-4">
@@ -462,11 +463,12 @@ export default function MerchantDashboard() {
           {recharged && (
             <div className={infoBoxSuccessClass}>
               <Icon name="checkCircle" className={inlineIconClass} />
-              {pts(recharged.points)} added for {rupees(recharged.amount)}. Ref: {recharged.reference}
+              {pts(recharged.points)} of promotional credits purchased for {rupees(recharged.amount)}. Ref:{' '}
+              {recharged.reference}
             </div>
           )}
-          <label className={labelClass}>Recharge Amount (₹, minimum {rupees(MIN_RECHARGE)})</label>
-          <div className="flex items-stretch gap-2">
+          <label className={labelClass}>Purchase Promotional Credits (₹, minimum {rupees(MIN_RECHARGE)})</label>
+          <div className="flex flex-wrap items-stretch gap-2 sm:flex-nowrap">
             <input
               type="number"
               inputMode="numeric"
@@ -476,13 +478,17 @@ export default function MerchantDashboard() {
               onChange={(e) => setRechargeAmount(e.target.value)}
               className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
             />
-            <button type="submit" className={`${btnPrimary} whitespace-nowrap`} disabled={recharging || !rechargeValid}>
-              {recharging ? 'Processing…' : 'Recharge'}
+            <button
+              type="submit"
+              className={`${btnPrimary} basis-full whitespace-nowrap sm:basis-auto`}
+              disabled={recharging || !rechargeValid}
+            >
+              {recharging ? 'Processing…' : 'Top up Campaign Quota'}
             </button>
           </div>
           <div className="mt-1.5 text-xs text-brand-navy/70">
             {rechargeValid
-              ? `You get ${pts(rechargeValue)} · ${rupees(rechargeValue)} + ${rupees(rechargeFee)} convenience fee (${FEE_PERCENT}) = ${rupees(rechargeValue + rechargeFee)} (test payment)`
+              ? `You receive ${pts(rechargeValue)} of promotional credits · ${rupees(rechargeValue)} + ${rupees(rechargeFee)} convenience fee (${FEE_PERCENT}) = ${rupees(rechargeValue + rechargeFee)} (test payment)`
               : `Enter at least ${rupees(MIN_RECHARGE)}.`}
           </div>
         </form>
@@ -492,15 +498,17 @@ export default function MerchantDashboard() {
           {withdrawn && (
             <div className={infoBoxSuccessClass}>
               <Icon name="checkCircle" className={inlineIconClass} />
-              {pts(withdrawn.points)} withdrawn · {rupees(withdrawn.amount)} sent to {withdrawn.bankName || 'your bank'}{' '}
-              ··{withdrawn.accountLast4}
-              {withdrawn.fee > 0 && ` (after ${rupees(withdrawn.fee)} fee)`}. Ref: {withdrawn.reference}
+              {pts(withdrawn.points)} settled as promotional rebate · {rupees(withdrawn.amount)} reimbursed to{' '}
+              {withdrawn.bankName || 'your settlement account'} ··{withdrawn.accountLast4}
+              {withdrawn.fee > 0 && ` (after ${rupees(withdrawn.fee)} platform settlement & audit fee)`}. Ref:{' '}
+              {withdrawn.reference}
             </div>
           )}
           <label className={labelClass}>
-            Withdraw Points to Bank (1 pt = ₹1{withdrawalFeePercent > 0 ? `, ${withdrawalFeePercent}% withdrawal fee` : ''})
+            Claim Marketing Reimbursement (1 pt = ₹1
+            {withdrawalFeePercent > 0 ? `, Platform Settlement & Audit Fee ${withdrawalFeePercent}%` : ''})
           </label>
-          <div className="flex items-stretch gap-2">
+          <div className="flex flex-wrap items-stretch gap-2 sm:flex-nowrap">
             <input
               type="number"
               inputMode="numeric"
@@ -523,21 +531,21 @@ export default function MerchantDashboard() {
             </button>
             <button
               type="submit"
-              className={`${btnPrimary} whitespace-nowrap`}
+              className={`${btnPrimary} basis-full whitespace-nowrap sm:basis-auto`}
               disabled={withdrawing || !withdrawValid || !bankLast4}
             >
-              {withdrawing ? 'Processing…' : 'Withdraw'}
+              {withdrawing ? 'Processing…' : 'Settle Promotional Rebate'}
             </button>
           </div>
           <div className="mt-1.5 text-xs text-brand-navy/70">
             {!bankLast4
-              ? 'No bank account on file — contact support to add your bank details.'
+              ? 'No settlement account on file — contact support to add your business account details.'
               : withdrawValid
                 ? withdrawFee > 0
-                  ? `${rupees(withdrawValue)} − ${rupees(withdrawFee)} fee (${withdrawalFeePercent}%) = you get ${rupees(withdrawNet)} in ${merchant.bankName || 'your bank'} ··${bankLast4} (test payout).`
-                  : `You get ${rupees(withdrawValue)} in ${merchant.bankName || 'your bank'} ··${bankLast4} (test payout).`
-                : `Paid to ${merchant.bankName || 'your bank'} ··${bankLast4}.`}{' '}
-            Today: {withdrawnToday.toLocaleString('en-IN')} / {dailyWithdrawalLimit.toLocaleString('en-IN')} pts used
+                  ? `${rupees(withdrawValue)} − ${rupees(withdrawFee)} platform settlement & audit fee (${withdrawalFeePercent}%) = ${rupees(withdrawNet)} reimbursed to ${merchant.bankName || 'your settlement account'} ··${bankLast4} (test settlement).`
+                  : `${rupees(withdrawValue)} reimbursed to ${merchant.bankName || 'your settlement account'} ··${bankLast4} (test settlement).`
+                : `Reimbursements are settled to ${merchant.bankName || 'your settlement account'} ··${bankLast4}.`}{' '}
+            Today: {withdrawnToday.toLocaleString('en-IN')} / {dailyWithdrawalLimit.toLocaleString('en-IN')} pts settled
             {withdrawLeftToday === 0 && ' — daily limit reached, try again tomorrow'}.
           </div>
         </form>
@@ -683,8 +691,8 @@ export default function MerchantDashboard() {
       <div className={panelClass}>
         <PanelTitle icon="gift">Give Reward Points</PanelTitle>
         <p className="mb-3 text-[13px] text-slate-500">
-          Enter the customer’s email and the bill amount. Your discount % of the bill is taken from your wallet as
-          points and shared: {MEMBER_SHARE * 100}% to the customer, {REFERRER_SHARE * 100}% to whoever referred them
+          Enter the customer’s email and the bill amount. Your discount % of the bill is issued from your
+          promotional credits as reward points and shared: {MEMBER_SHARE * 100}% to the customer, {REFERRER_SHARE * 100}% to whoever referred them
           and the rest to ALEOS. The customer gets an email about it. If they aren’t an ALEOS member yet, they get a
           code by email — enter it here and their account is created for them.
         </p>
@@ -699,13 +707,13 @@ export default function MerchantDashboard() {
               `, ${pts(issued.referrerPoints)} to their referrer ${referrerLabel(issued)}`}
             , {pts(issued.masterPoints ?? 0)} to ALEOS
             {issued.newMember && ' (new member account created — counted as your referral)'}. They’ve been emailed.
-            Wallet now has{' '}
-            {pts(issued.walletBalanceAfter ?? walletBalance)}.
+            Promotional credits remaining: {pts(issued.walletBalanceAfter ?? walletBalance)}.
           </div>
         )}
         {previewPoints > 0 && notEnoughPoints && (
           <div className={errorBoxClass}>
-            This needs {pts(previewPoints)}, but your wallet has {pts(walletBalance)}. Please recharge above.
+            This needs {pts(previewPoints)}, but you have {pts(walletBalance)} in promotional credits. Please top
+            up your campaign quota above.
           </div>
         )}
 
@@ -805,18 +813,20 @@ export default function MerchantDashboard() {
       </div>
 
       <div className={panelClass}>
-        <PanelTitle icon="repeat">Use Member Points</PanelTitle>
+        <PanelTitle icon="repeat">Apply Reward Points for Instant Discount</PanelTitle>
         <p className="mb-3 text-[13px] text-slate-500">
-          When a member wants to pay with their points, enter their email to see their points. They get a code by
-          email to approve it, and the points they use are added to your wallet.
+          When a member wants to apply their ALEOS Reward Points as an instant discount on their bill, enter their
+          email to see their points. They get a code by email to approve it, and the points they apply are added back
+          to your promotional credits.
         </p>
 
         {redeemError && <div className={errorBoxClass}>{redeemError}</div>}
         {redeemed && (
           <div className={infoBoxSuccessClass}>
             <Icon name="checkCircle" className={inlineIconClass} />
-            {pts(redeemed.points)} used by {redeemed.member?.name || redeemed.member?.email || 'the member'}. They now
-            have {pts(redeemed.memberPointsAfter ?? 0)}. Added to your wallet.
+            {pts(redeemed.points)} applied as an instant discount by{' '}
+            {redeemed.member?.name || redeemed.member?.email || 'the member'}. They now have{' '}
+            {pts(redeemed.memberPointsAfter ?? 0)}. Added back to your promotional credits.
           </div>
         )}
 
@@ -860,10 +870,10 @@ export default function MerchantDashboard() {
             </div>
 
             {redeemCustomer.totalPoints < 1 ? (
-              <p className="mb-0 text-[13px] text-slate-500">This member has no points to use yet.</p>
+              <p className="mb-0 text-[13px] text-slate-500">This member has no reward points to apply yet.</p>
             ) : (
               <>
-                <label className={labelClass}>Points to Use</label>
+                <label className={labelClass}>Reward Points to Apply</label>
                 <div className="mb-4 flex items-stretch gap-2">
                   <input
                     type="number"
@@ -890,7 +900,7 @@ export default function MerchantDashboard() {
                 {redeemOtpSent && (
                   <>
                     <div className="mb-3 border-l-4 border-amber-500 bg-amber-50/60 py-2 pr-2 pl-3.5 text-[13px] leading-relaxed text-amber-900">
-                      {redeemOtpSent.message} — ask the member for the code to approve using {pts(Number(redeemAmount))}.{' '}
+                      {redeemOtpSent.message} — ask the member for the code to approve applying {pts(Number(redeemAmount))}.{' '}
                       <button
                         type="button"
                         className="font-semibold text-brand-blue"
@@ -936,7 +946,7 @@ export default function MerchantDashboard() {
                   {redeeming
                     ? 'Processing…'
                     : redeemOtpSent
-                      ? `Verify Code & Use ${pts(Number(redeemAmount))}`
+                      ? `Verify Code & Apply ${pts(Number(redeemAmount))} Discount`
                       : 'Send Approval Code to Member'}
                 </button>
               </>

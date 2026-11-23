@@ -3,8 +3,9 @@ import { formatDate, formatTimeIST } from '../api'
 import Icon from './Icon'
 import { badgePointsClass, tdClass, thClass } from './ui'
 
-// A merchant's history card with tabs: Passbook (every point in/out with balance), Points Used, Recharges and
-// Withdrawals. Shared by the merchant dashboard and the admin merchant profile so both look the same.
+// A merchant's history card with tabs: Passbook (every credit in/out), Discounts Applied, Credit Purchases and
+// Rebate Settlements. Shared by the merchant dashboard and the admin merchant profile so both look the same.
+// UI copy avoids wallet / cash / withdrawal wording (PPI triggers); internal names still say wallet/withdrawal.
 
 const rupees = (n) => `₹${(n ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 const pts = (n) => `${(n ?? 0).toLocaleString('en-IN')} pts`
@@ -12,12 +13,21 @@ const pts = (n) => `${(n ?? 0).toLocaleString('en-IN')} pts`
 // Icon for each kind of passbook entry (types come from the server)
 const passbookIcons = {
   'Points given': 'gift',
-  Recharge: 'wallet',
-  'Sign-up top-up': 'wallet',
-  Withdrawal: 'banknote',
-  'Points used by member': 'repeat',
+  Recharge: 'coins',
+  'Sign-up top-up': 'coins',
+  Withdrawal: 'repeat',
+  'Points used by member': 'tag',
   'Referral share': 'users',
   'ALEOS share': 'crown',
+}
+
+// Loyalty/SaaS wording shown for the server's passbook types (avoids wallet/payout terms)
+const passbookLabels = {
+  'Points given': 'Reward points issued',
+  Recharge: 'Promotional credits purchased',
+  'Sign-up top-up': 'Starter campaign quota',
+  Withdrawal: 'Promotional rebate settled',
+  'Points used by member': 'Reward points applied as discount',
 }
 
 function EmptyRow({ colSpan, children }) {
@@ -61,9 +71,9 @@ export default function MerchantHistory({
 
   const tabs = [
     { id: 'passbook', icon: 'book', label: 'Passbook', count: passbook?.length },
-    { id: 'used', icon: 'repeat', label: 'Points Used', count: redemptions.length },
-    { id: 'recharges', icon: 'wallet', label: 'Recharges', count: payments.length },
-    { id: 'withdrawals', icon: 'banknote', label: 'Withdrawals', count: withdrawals.length },
+    { id: 'used', icon: 'tag', label: 'Discounts Applied', count: redemptions.length },
+    { id: 'recharges', icon: 'coins', label: 'Credit Purchases', count: payments.length },
+    { id: 'withdrawals', icon: 'repeat', label: 'Rebate Settlements', count: withdrawals.length },
   ]
 
   return (
@@ -76,7 +86,7 @@ export default function MerchantHistory({
           History
         </h3>
         <div className="pb-3 text-xs text-slate-500">
-          Wallet balance <span className="font-bold text-brand-navy">{pts(walletBalance)}</span>
+          Available promotional credits <span className="font-bold text-brand-navy">{pts(walletBalance)}</span>
         </div>
         <div role="tablist" className="-mb-px flex w-full gap-1 overflow-x-auto">
           {tabs.map((t) => (
@@ -115,14 +125,14 @@ export default function MerchantHistory({
                 <th className={thClass}>Particulars</th>
                 <th className={`${thClass} text-right`}>Credit (+)</th>
                 <th className={`${thClass} text-right`}>Debit (−)</th>
-                <th className={`${thClass} text-right`}>Balance</th>
+                <th className={`${thClass} text-right`}>Credits After</th>
               </tr>
             </thead>
             <tbody>
               {passbook == null ? (
                 <EmptyRow colSpan={5}>Loading…</EmptyRow>
               ) : passbook.length === 0 ? (
-                <EmptyRow colSpan={5}>No wallet activity yet.</EmptyRow>
+                <EmptyRow colSpan={5}>No promotional credit activity yet.</EmptyRow>
               ) : (
                 passbook.map((e) => (
                   <tr key={e.id} className={rowClass}>
@@ -137,7 +147,7 @@ export default function MerchantHistory({
                           <Icon name={passbookIcons[e.type] || 'coins'} className="h-4 w-4" />
                         </span>
                         <div className="min-w-0">
-                          <span className="block font-semibold text-brand-navy">{e.type}</span>
+                          <span className="block font-semibold text-brand-navy">{passbookLabels[e.type] || e.type}</span>
                           <span className="text-xs text-slate-500">
                             {e.details}
                             {e.reference && ` · Ref ${e.reference}`}
@@ -169,13 +179,13 @@ export default function MerchantHistory({
               <tr>
                 <th className={thClass}>Date</th>
                 <th className={thClass}>Member</th>
-                <th className={`${thClass} text-right`}>Points Used</th>
-                <th className={`${thClass} text-right`}>Wallet After</th>
+                <th className={`${thClass} text-right`}>Points Applied</th>
+                <th className={`${thClass} text-right`}>Credits After</th>
               </tr>
             </thead>
             <tbody>
               {redemptions.length === 0 ? (
-                <EmptyRow colSpan={4}>No points used at {shopLabel} yet.</EmptyRow>
+                <EmptyRow colSpan={4}>No reward points applied as discounts at {shopLabel} yet.</EmptyRow>
               ) : (
                 redemptions.map((r) => (
                   <tr key={r._id} className={rowClass}>
@@ -208,19 +218,19 @@ export default function MerchantHistory({
                 <th className={thClass}>Date</th>
                 <th className={thClass}>Type</th>
                 <th className={`${thClass} text-right`}>Paid</th>
-                <th className={`${thClass} text-right`}>Points Added</th>
-                <th className={`${thClass} text-right`}>Wallet After</th>
+                <th className={`${thClass} text-right`}>Credits Added</th>
+                <th className={`${thClass} text-right`}>Credits After</th>
               </tr>
             </thead>
             <tbody>
               {payments.length === 0 ? (
-                <EmptyRow colSpan={5}>No recharges yet.</EmptyRow>
+                <EmptyRow colSpan={5}>No promotional credit purchases yet.</EmptyRow>
               ) : (
                 payments.map((p) => (
                   <tr key={p._id} className={rowClass}>
                     <DateCell value={p.createdAt} />
                     <td className={tdClass}>
-                      <span className="block font-bold text-brand-navy">{p.kind === 'signup' ? 'Sign-up' : 'Recharge'}</span>
+                      <span className="block font-bold text-brand-navy">{p.kind === 'signup' ? 'Starter quota' : 'Campaign quota top-up'}</span>
                       <span className="text-xs text-slate-500">
                         {p.mode === 'dummy' ? 'Test · ' : ''}Ref {p.reference}
                       </span>
@@ -254,22 +264,22 @@ export default function MerchantHistory({
             <thead className={theadClass}>
               <tr>
                 <th className={thClass}>Date</th>
-                <th className={thClass}>Sent To</th>
-                <th className={`${thClass} text-right`}>Points</th>
-                <th className={`${thClass} text-right`}>Amount Sent</th>
-                <th className={`${thClass} text-right`}>Wallet After</th>
+                <th className={thClass}>Settled To</th>
+                <th className={`${thClass} text-right`}>Credits</th>
+                <th className={`${thClass} text-right`}>Reimbursed</th>
+                <th className={`${thClass} text-right`}>Credits After</th>
               </tr>
             </thead>
             <tbody>
               {withdrawals.length === 0 ? (
-                <EmptyRow colSpan={5}>No withdrawals yet.</EmptyRow>
+                <EmptyRow colSpan={5}>No promotional rebates settled yet.</EmptyRow>
               ) : (
                 withdrawals.map((w) => (
                   <tr key={w._id} className={rowClass}>
                     <DateCell value={w.createdAt} />
                     <td className={tdClass}>
                       <span className="block font-bold text-brand-navy">
-                        {w.bankName || 'Bank'} ··{w.accountLast4}
+                        {w.bankName || 'Settlement account'} ··{w.accountLast4}
                       </span>
                       <span className="text-xs text-slate-500">
                         {w.mode === 'dummy' ? 'Test · ' : ''}Ref {w.reference}
@@ -280,7 +290,7 @@ export default function MerchantHistory({
                       <span className="block font-semibold">{rupees(w.amount)}</span>
                       {w.fee > 0 && (
                         <span className="text-xs text-slate-500">
-                          after {rupees(w.fee)} fee ({w.feePercent}%)
+                          after {rupees(w.fee)} platform settlement & audit fee ({w.feePercent}%)
                         </span>
                       )}
                     </td>
