@@ -49,15 +49,11 @@ const upperCase = ['ifsc', 'panNumber']
 const bankCheckFields = ['accountHolderName', 'ifsc', 'accountNumber']
 const BANK_POLL_MS = 3000
 
-// Must match SIGNUP_RECHARGE_OPTIONS / CONVENIENCE_FEE_RATE / ONBOARDING_FEE / ONBOARDING_TAX_RATE on the server:
-// ₹1 = 1 point, a 3% convenience fee, and a one-time ₹249 onboarding fee + 18% GST
-const RECHARGE_OPTIONS = [1000, 2000, 3000]
+// Must match CONVENIENCE_FEE_RATE on the server: ₹1 = 1 point, plus a 3% convenience fee (no onboarding fee).
+// The recharge amounts themselves are set by the admin and come from /merchants/categories.
 const CONVENIENCE_FEE_RATE = 0.03
 const FEE_PERCENT = `${CONVENIENCE_FEE_RATE * 100}%`
-const ONBOARDING_FEE = 249
-const ONBOARDING_TAX_RATE = 0.18
 const toPaise = (n) => Math.round(n * 100) / 100
-const ONBOARDING_TAX = toPaise(ONBOARDING_FEE * ONBOARDING_TAX_RATE)
 const rupees = (n) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 
 // Progress across the top: a bar on phones, numbered circles on bigger screens
@@ -144,11 +140,12 @@ export default function JoinMerchant() {
   const [payment, setPayment] = useState(null)
   const [paying, setPaying] = useState(false)
   const [paymentError, setPaymentError] = useState('')
-  // Merchant picks one of RECHARGE_OPTIONS to load at sign-up
-  const [rechargeValue, setRechargeValue] = useState(RECHARGE_OPTIONS[0])
-  const rechargeValid = RECHARGE_OPTIONS.includes(rechargeValue)
+  // Merchant picks one of the admin's recharge amounts to load at sign-up (lowest picked by default)
+  const [rechargeOptions, setRechargeOptions] = useState([])
+  const [rechargeValue, setRechargeValue] = useState(0)
+  const rechargeValid = rechargeOptions.includes(rechargeValue)
   const rechargeFee = toPaise(rechargeValue * CONVENIENCE_FEE_RATE)
-  const rechargeTotal = toPaise(rechargeValue + rechargeFee + ONBOARDING_FEE + ONBOARDING_TAX)
+  const rechargeTotal = toPaise(rechargeValue + rechargeFee)
   // Restaurants and grocery shops may add an FSSAI licence number
   const asksFssai = fssaiCategories.includes(category)
 
@@ -157,6 +154,9 @@ export default function JoinMerchant() {
       .then((data) => {
         setCategories(data.categories)
         setFssaiCategories(data.fssaiCategories || [])
+        const options = data.signupRechargeOptions || []
+        setRechargeOptions(options)
+        setRechargeValue(options[0] || 0)
       })
       .catch((err) => setLoadError(err.message))
   }, [])
@@ -765,7 +765,7 @@ export default function JoinMerchant() {
             <>
               <label className={labelClass}>Choose Wallet Recharge *</label>
               <div role="radiogroup" className="mb-4 grid grid-cols-3 gap-2 sm:gap-3">
-                {RECHARGE_OPTIONS.map((value) => {
+                {rechargeOptions.map((value) => {
                   const selected = rechargeValue === value
                   return (
                     <button
@@ -799,21 +799,12 @@ export default function JoinMerchant() {
                   <span>Convenience fee ({FEE_PERCENT})</span>
                   <span className="font-semibold whitespace-nowrap text-slate-900">{rupees(rechargeFee)}</span>
                 </div>
-                <div className="flex justify-between gap-3 py-0.5">
-                  <span>Onboarding fee (one-time)</span>
-                  <span className="font-semibold whitespace-nowrap text-slate-900">{rupees(ONBOARDING_FEE)}</span>
-                </div>
-                <div className="flex justify-between gap-3 py-0.5">
-                  <span>GST on onboarding fee ({ONBOARDING_TAX_RATE * 100}%)</span>
-                  <span className="font-semibold whitespace-nowrap text-slate-900">{rupees(ONBOARDING_TAX)}</span>
-                </div>
                 <div className="mt-1.5 flex justify-between border-t border-slate-200 pt-2 text-sm font-bold text-slate-900">
                   <span>Total to pay</span>
                   <span>{rupees(rechargeTotal)}</span>
                 </div>
                 <p className="mt-2 mb-0 text-xs text-slate-500">
-                  ₹1 = 1 point in your wallet to give to members. The onboarding fee is charged once; you can recharge
-                  more any time from your dashboard.
+                  ₹1 = 1 point in your wallet to give to members. You can recharge more any time from your dashboard.
                 </p>
               </div>
 

@@ -26,6 +26,10 @@ const statusBadge = {
 
 const merchantFilters = ['approved', 'pending', 'rejected', 'all']
 const PAGE_SIZE = 20
+// Must match SIGNUP_RECHARGE_MIN / _MAX / _MAX_OPTIONS in the server's Setting model
+const SIGNUP_RECHARGE_MIN = 1000
+const SIGNUP_RECHARGE_MAX = 1000000
+const SIGNUP_RECHARGE_MAX_OPTIONS = 6
 
 function StatTile({ label, value, tone = 'slate' }) {
   const tones = {
@@ -58,6 +62,10 @@ export default function AdminDashboard() {
   const [feeDraft, setFeeDraft] = useState('')
   const [savingSettings, setSavingSettings] = useState(false)
   const [settingsSaved, setSettingsSaved] = useState(false)
+  // Sign-up wallet recharge amounts (₹ = points); optionsDraft holds what's typed, one string per box
+  const [optionsDraft, setOptionsDraft] = useState([])
+  const [savingOptions, setSavingOptions] = useState(false)
+  const [optionsSaved, setOptionsSaved] = useState(false)
   // The company's ALEOS merchant account: { merchant, summary }
   const [master, setMaster] = useState(null)
   const [openingMaster, setOpeningMaster] = useState(false)
@@ -115,6 +123,7 @@ export default function AdminDashboard() {
       .then((d) => {
         setSettings(d.settings)
         setFeeDraft(String(d.settings.withdrawalFeePercent ?? 0))
+        setOptionsDraft((d.settings.signupRechargeOptions || []).map(String))
       })
       .catch((err) => setError(err.message))
   }, [adminToken, adminApi])
@@ -259,6 +268,34 @@ export default function AdminDashboard() {
       setError(err.message)
     } finally {
       setSavingSettings(false)
+    }
+  }
+
+  async function saveRechargeOptions(e) {
+    e.preventDefault()
+    setError('')
+    setOptionsSaved(false)
+    const values = optionsDraft.filter((v) => v.trim() !== '').map(Number)
+    if (values.length === 0) {
+      setError('Add at least one sign-up recharge amount.')
+      return
+    }
+    if (values.some((v) => !Number.isInteger(v) || v < SIGNUP_RECHARGE_MIN || v > SIGNUP_RECHARGE_MAX)) {
+      setError(
+        `Each sign-up recharge must be a whole amount from ₹${SIGNUP_RECHARGE_MIN.toLocaleString('en-IN')} to ₹${SIGNUP_RECHARGE_MAX.toLocaleString('en-IN')}.`,
+      )
+      return
+    }
+    setSavingOptions(true)
+    try {
+      const d = await adminApi('/admin/settings', { method: 'PATCH', body: { signupRechargeOptions: values } })
+      setSettings(d.settings)
+      setOptionsDraft(d.settings.signupRechargeOptions.map(String))
+      setOptionsSaved(true)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setSavingOptions(false)
     }
   }
 
@@ -764,6 +801,89 @@ export default function AdminDashboard() {
             <button type="submit" className={`${btnBase} bg-brand-navy text-white whitespace-nowrap`} disabled={savingSettings}>
               {savingSettings ? 'Saving…' : 'Save'}
             </button>
+          </form>
+        </div>
+      )}
+
+      {tab === 'settings' && (
+        <div className="mt-4 max-w-lg rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <PanelTitle icon="coins" className="mt-0 mb-1">
+            Sign-up Recharge Options
+          </PanelTitle>
+          <p className="mt-0 mb-3 text-[13px] text-slate-500">
+            The amounts a new merchant can choose from at sign-up. They get 1 point for every ₹1 (₹2,000 = 2,000
+            points), plus the convenience fee on top. Up to {SIGNUP_RECHARGE_MAX_OPTIONS} amounts, each
+            from ₹{SIGNUP_RECHARGE_MIN.toLocaleString('en-IN')} to ₹{SIGNUP_RECHARGE_MAX.toLocaleString('en-IN')}.
+          </p>
+          {optionsSaved && (
+            <div className={`${infoBoxAdminClass} mb-3`}>
+              <Icon name="checkCircle" className={inlineIconClass} />
+              Sign-up options updated:{' '}
+              {settings.signupRechargeOptions.map((v) => `₹${v.toLocaleString('en-IN')}`).join(', ')}.
+            </div>
+          )}
+          <form onSubmit={saveRechargeOptions}>
+            <div className="mb-3 space-y-2">
+              {optionsDraft.map((value, i) => {
+                const points = Number(value)
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-slate-500">₹</span>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={SIGNUP_RECHARGE_MIN}
+                      max={SIGNUP_RECHARGE_MAX}
+                      step="1"
+                      aria-label={`Sign-up recharge amount ${i + 1}`}
+                      value={value}
+                      onChange={(e) => {
+                        const next = [...optionsDraft]
+                        next[i] = e.target.value
+                        setOptionsDraft(next)
+                        setOptionsSaved(false)
+                      }}
+                      className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
+                    />
+                    <span className="w-24 shrink-0 text-right text-xs text-slate-500">
+                      = {Number.isInteger(points) && points > 0 ? points.toLocaleString('en-IN') : '—'} pts
+                    </span>
+                    <button
+                      type="button"
+                      className={`${btnBase} border border-slate-200 bg-white px-3 text-slate-600`}
+                      disabled={optionsDraft.length <= 1}
+                      aria-label={`Remove amount ${i + 1}`}
+                      onClick={() => {
+                        setOptionsDraft(optionsDraft.filter((_, j) => j !== i))
+                        setOptionsSaved(false)
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`${btnBase} border border-slate-200 bg-white text-brand-navy`}
+                disabled={optionsDraft.length >= SIGNUP_RECHARGE_MAX_OPTIONS}
+                onClick={() => {
+                  setOptionsDraft([...optionsDraft, ''])
+                  setOptionsSaved(false)
+                }}
+              >
+                + Add amount
+              </button>
+              <button
+                type="submit"
+                className={`${btnBase} bg-brand-navy text-white whitespace-nowrap`}
+                disabled={savingOptions}
+              >
+                {savingOptions ? 'Saving…' : 'Save options'}
+              </button>
+            </div>
           </form>
         </div>
       )}
