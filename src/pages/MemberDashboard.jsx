@@ -9,6 +9,13 @@ import ShareButtons from '../components/ShareButtons'
 import { btnPrimary, btnSecondary, errorBoxClass, inputClass, labelClass } from '../components/ui'
 import { useAuth } from '../store/auth'
 
+// Sample partner shops and the reward % each offers (illustration only, not real merchants)
+const sampleShops = [
+  { emoji: '🥞', shop: 'Sri Ganesh Upahara', note: 'Tiffin · Moodbidri', percent: 10 },
+  { emoji: '☕', shop: 'Kambada Cafe', note: 'Cafe · Moodbidri', percent: 10 },
+  { emoji: '🛍️', shop: 'Vaishnavi Silks', note: 'Sarees · Moodbidri', percent: 5 },
+]
+
 export default function MemberDashboard() {
   const navigate = useNavigate()
   const { memberToken, signOutMember } = useAuth()
@@ -163,6 +170,22 @@ Start today in 2 minutes: ${merchantLink}`
         <div className="rounded-2xl border border-brand-blue/20 bg-brand-light p-4 text-center">
           <div className="text-xs font-bold tracking-wide text-brand-navy/70 uppercase">Members Referred</div>
           <div className="font-display text-3xl font-extrabold text-brand-navy">{referrals.length}</div>
+        </div>
+      </div>
+
+      <div className="mb-5 rounded-2xl border border-brand-blue/20 bg-brand-light/50 p-4 sm:p-5">
+        <PanelTitle icon="store">Shops Offering Rewards</PanelTitle>
+        <div className="space-y-2.5">
+          {sampleShops.map((s) => (
+            <div key={s.shop} className="flex items-center gap-3 rounded-2xl bg-white px-3 py-2.5 shadow-sm sm:px-3.5 sm:py-3">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-lg">{s.emoji}</span>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-bold text-brand-navy">{s.shop}</div>
+                <div className="text-xs text-slate-500">{s.note}</div>
+              </div>
+              <span className="text-sm font-extrabold whitespace-nowrap text-emerald-600">{s.percent}% rewards</span>
+            </div>
+          ))}
         </div>
       </div>
 

@@ -120,7 +120,7 @@ export default function JoinMember() {
   return (
     <SplitPage
       eyebrow="Join as Member"
-      title="Start earning rewards"
+      title="Start Collecting Promotional Points"
       description="Create your free account in a minute. You'll need your email and a referral code from an existing member."
       points={memberPoints}
     >
@@ -153,7 +153,7 @@ export default function JoinMember() {
         <div className="flex items-stretch gap-2">
           <input
             type="email"
-            placeholder="you@example.com"
+            placeholder="Email"
             required
             value={email}
             disabled={otpSent}

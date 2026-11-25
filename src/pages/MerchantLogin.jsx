@@ -79,7 +79,7 @@ export default function MerchantLogin() {
         <div className="mb-1.5 flex items-stretch gap-2">
           <input
             type="email"
-            placeholder="shop@example.com"
+            placeholder="Email"
             required
             value={email}
             disabled={otpSent}

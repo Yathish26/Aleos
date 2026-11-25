@@ -723,7 +723,7 @@ export default function MerchantDashboard() {
               <label className={labelClass}>Customer Email</label>
               <input
                 type="email"
-                placeholder="customer@example.com"
+                placeholder="Email"
                 required
                 value={customerEmail}
                 onChange={(e) => {
@@ -835,7 +835,7 @@ export default function MerchantDashboard() {
           <div className="mb-4 flex items-stretch gap-2">
             <input
               type="email"
-              placeholder="member@example.com"
+              placeholder="Email"
               value={redeemEmail}
               onChange={(e) => {
                 setRedeemEmail(e.target.value)

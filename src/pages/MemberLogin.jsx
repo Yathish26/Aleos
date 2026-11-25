@@ -79,7 +79,7 @@ export default function MemberLogin() {
         <div className="mb-1.5 flex items-stretch gap-2">
           <input
             type="email"
-            placeholder="you@example.com"
+            placeholder="Email"
             required
             value={email}
             disabled={otpSent}

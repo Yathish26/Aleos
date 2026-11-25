@@ -142,7 +142,7 @@ const benefits = [
   {
     icon: 'coins',
     title: 'Get Points when friends shop',
-    text: 'When your friends start spending in listed Aleos Merchant place you will start earning promotion points',
+    text: 'When your friends start spending in listed Aleos Merchant place you will start collecting promotional points',
   },
   { icon: 'trending', title: 'Grow with your city', text: 'More shops join every week — more places to earn and spend.' },
 ]
@@ -175,13 +175,6 @@ const merchantPerks = [
 const networkStats = [
   { icon: 'store', value: '137', label: 'Merchants onboarded' },
   { icon: 'user', value: '4,862', label: 'Customers registered' },
-]
-
-// Example activity shown on the hero card (illustration only)
-const sampleActivity = [
-  { emoji: '🥞', shop: 'Sri Ganesh Upahara', note: 'Tiffin · Moodbidri', points: '+40' },
-  { emoji: '☕', shop: 'Kambada Cafe', note: 'Cafe · Moodbidri', points: '+20' },
-  { emoji: '🛍️', shop: 'Vaishnavi Silks', note: 'Sarees · Moodbidri', points: '+160' },
 ]
 
 // Placeholder partner businesses for the showcase section (dummy names)
@@ -291,13 +284,13 @@ function SectionHeading({ eyebrow, title, text }) {
   )
 }
 
-// Decorative hero card: network totals + sample activity (not real data)
+// Decorative hero card: network totals (not real data)
 function HeroCard() {
   return (
     <div className="relative mx-auto w-full max-w-sm">
       <div className="absolute -inset-4 rounded-4xl bg-linear-to-br from-brand-cyan/40 to-brand-blue/40 blur-2xl" />
       <div className="relative rounded-3xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-xl sm:p-6">
-        <div className="mb-4 grid grid-cols-2 gap-2.5 sm:mb-5 sm:gap-3">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
           {networkStats.map((s) => (
             <div key={s.label} className="rounded-2xl border border-white/10 bg-white/10 p-3 sm:p-4">
               <span className="mb-2 flex h-9 w-9 items-center justify-center rounded-xl bg-brand-cyan text-brand-navy">
@@ -307,18 +300,6 @@ function HeroCard() {
               <div className="text-[11px] leading-snug font-semibold tracking-wide text-blue-100/80 uppercase sm:text-xs">
                 {s.label}
               </div>
-            </div>
-          ))}
-        </div>
-        <div className="space-y-2.5" aria-hidden="true">
-          {sampleActivity.map((a) => (
-            <div key={a.shop} className="flex items-center gap-3 rounded-2xl bg-white/95 px-3 py-2.5 sm:px-3.5 sm:py-3">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-light text-lg">{a.emoji}</span>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-bold text-brand-navy">{a.shop}</div>
-                <div className="text-xs text-slate-500">{a.note}</div>
-              </div>
-              <span className="text-sm font-extrabold text-emerald-600">{a.points}</span>
             </div>
           ))}
         </div>
@@ -401,7 +382,7 @@ export default function Home() {
 
       {/* How it works */}
       <section className={`${containerClass} py-14 sm:py-24`}>
-        <SectionHeading eyebrow="How it works" title="Three simple steps to start earning" />
+        <SectionHeading eyebrow="How it works" title="Three simple steps to start collecting promotional points" />
 
         <div className="relative grid gap-3 sm:grid-cols-3 sm:gap-6">
           {/* Connecting line behind the step numbers */}
@@ -574,7 +555,7 @@ export default function Home() {
                 to="/join/member"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-cyan px-7 py-3.5 text-sm font-bold text-brand-navy transition-colors hover:bg-white"
               >
-                Start earning
+                Start Collecting Promotional Points
                 <Icon name="arrowRight" className="h-4 w-4" />
               </Link>
               <Link

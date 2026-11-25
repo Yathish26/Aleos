@@ -576,7 +576,7 @@ export default function JoinMerchant() {
               <div className="flex items-stretch gap-2">
                 <input
                   type="email"
-                  placeholder="shop@example.com"
+                  placeholder="Email"
                   autoComplete="email"
                   value={form.email}
                   disabled={otpSent}
