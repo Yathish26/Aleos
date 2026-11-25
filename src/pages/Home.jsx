@@ -141,8 +141,8 @@ const benefits = [
   { icon: 'mapPin', title: 'Discover local', text: 'Find nearby plumbers, job openings, and local events.' },
   {
     icon: 'coins',
-    title: 'Get paid when friends shop',
-    text: 'When you invite friends, you earn a % bonus on their purchases!',
+    title: 'Get Points when friends shop',
+    text: 'When your friends start spending in listed Aleos Merchant place you will start earning promotion points',
   },
   { icon: 'trending', title: 'Grow with your city', text: 'More shops join every week — more places to earn and spend.' },
 ]

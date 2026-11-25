@@ -67,9 +67,9 @@ const sections = [
       ],
     ],
     list: [
-      '80% to Customer Wallet: Issued directly to the purchasing member as reward points for repeat redemptions across the ALEOS network.',
-      '10% to Referrer Pool: Distributed to the active member who referred the buyer to the network.',
-      '10% ALEOS Platform Fee: Deducted automatically as the platform service fee upon point issuance.',
+      '70% to Customer Wallet: Issued directly to the purchasing member as reward points for repeat redemptions across the ALEOS network.',
+      '10% to Referrer Pool: Distributed to the member or merchant who referred the buyer to the network. New customers who first join ALEOS at your counter count as your referrals, so this 10% comes back to your wallet.',
+      '20% ALEOS Platform Fee: Deducted automatically as the platform service fee upon point issuance. If the buyer has no referrer, the referrer share also goes to ALEOS (30% in total).',
     ],
     after: [
       [

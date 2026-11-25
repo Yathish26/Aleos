@@ -37,9 +37,9 @@ const sections = [
       ],
     ],
     list: [
-      '80% to Your Wallet: Credited directly as reward points for future savings across the network.',
-      '10% to Your Referrer: Credited to the active member who introduced you to the ALEOS network.',
-      '10% to ALEOS: Retained as platform maintenance and processing service fees.',
+      '70% to Your Wallet: Credited directly as reward points for future savings across the network.',
+      '10% to Your Referrer: Credited to the member or partner merchant who introduced you to the ALEOS network.',
+      '20% to ALEOS: Retained as platform maintenance and processing service fees. If you joined without a referrer, the referrer share also goes to ALEOS (30% in total).',
     ],
     after: [
       ['Calculations', 'Points are calculated on the final gross bill amount verified by the merchant at the billing counter.'],
