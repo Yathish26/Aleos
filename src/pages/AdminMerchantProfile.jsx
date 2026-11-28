@@ -205,7 +205,8 @@ export default function AdminMerchantProfile() {
       </Section>
 
       <div className="mb-3 text-xs text-slate-500">
-        Total recharged {rupees(summary.amountRecharged)} · convenience fees {rupees(summary.rechargeFees)} · withdrawal
+        Total recharged {rupees(summary.amountRecharged)} · GST {rupees(summary.rechargeGst ?? 0)}
+        {summary.rechargeFees > 0 && <> · old convenience fees {rupees(summary.rechargeFees)}</>} · withdrawal
         fees {rupees(summary.withdrawalFees)}
       </div>
       <MerchantHistory

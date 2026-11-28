@@ -19,10 +19,10 @@ import { useAuth } from '../store/auth'
 
 // Same numbers the server uses — only for the previews, the server does the real calculation.
 // Members get the merchant's discount % of the bill as points; the merchant's wallet holds points
-// (₹1 recharged = 1 point, plus a 3% fee).
+// (₹1 recharged = 1 point, plus 18% GST).
 const MIN_RECHARGE = 1000
-const CONVENIENCE_FEE_RATE = 0.03
-const FEE_PERCENT = `${CONVENIENCE_FEE_RATE * 100}%`
+const GST_RATE = 0.18
+const GST_PERCENT = `${GST_RATE * 100}%`
 const rupees = (n) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 
 // Shares of every bill's points — same as the server (it does the real split)
@@ -154,7 +154,7 @@ export default function MerchantDashboard() {
 
   const rechargeValue = Number(rechargeAmount) || 0
   const rechargeValid = Number.isInteger(rechargeValue) && rechargeValue >= MIN_RECHARGE
-  const rechargeFee = Math.round(rechargeValue * CONVENIENCE_FEE_RATE * 100) / 100
+  const rechargeGst = Math.round(rechargeValue * GST_RATE * 100) / 100
 
   // Withdrawals: 1 point = ₹1 to the bank minus the admin's fee %, capped per day (the server enforces both)
   const { withdrawals, withdrawnToday, dailyWithdrawalLimit, withdrawalFeePercent } = data
@@ -447,247 +447,6 @@ export default function MerchantDashboard() {
 
       {error && <div className={errorBoxClass}>{error}</div>}
 
-      <div className="mb-5 rounded-2xl border border-brand-blue/30 bg-brand-light p-4">
-        <div className="flex items-center gap-1.5 text-xs font-bold uppercase text-brand-navy">
-          <Icon name="coins" className="h-4 w-4" />
-          Available Promotional Credits
-        </div>
-        <div className="text-3xl font-extrabold text-brand-navy">{pts(walletBalance)}</div>
-        <div className="mt-0.5 text-xs text-brand-navy/70">
-          Credits you can issue to members as reward points. Each ₹1 of campaign quota = 1 credit, plus a{' '}
-          {FEE_PERCENT} convenience fee.
-        </div>
-
-        <form onSubmit={handleRecharge} className="mt-4 border-t border-brand-blue/30 pt-4">
-          {rechargeError && <div className={errorBoxClass}>{rechargeError}</div>}
-          {recharged && (
-            <div className={infoBoxSuccessClass}>
-              <Icon name="checkCircle" className={inlineIconClass} />
-              {pts(recharged.points)} of promotional credits purchased for {rupees(recharged.amount)}. Ref:{' '}
-              {recharged.reference}
-            </div>
-          )}
-          <label className={labelClass}>Purchase Promotional Credits (₹, minimum {rupees(MIN_RECHARGE)})</label>
-          <div className="flex flex-wrap items-stretch gap-2 sm:flex-nowrap">
-            <input
-              type="number"
-              inputMode="numeric"
-              min={MIN_RECHARGE}
-              step="1"
-              value={rechargeAmount}
-              onChange={(e) => setRechargeAmount(e.target.value)}
-              className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
-            />
-            <button
-              type="submit"
-              className={`${btnPrimary} basis-full whitespace-nowrap sm:basis-auto`}
-              disabled={recharging || !rechargeValid}
-            >
-              {recharging ? 'Processing…' : 'Top up Campaign Quota'}
-            </button>
-          </div>
-          <div className="mt-1.5 text-xs text-brand-navy/70">
-            {rechargeValid
-              ? `You receive ${pts(rechargeValue)} of promotional credits · ${rupees(rechargeValue)} + ${rupees(rechargeFee)} convenience fee (${FEE_PERCENT}) = ${rupees(rechargeValue + rechargeFee)} (test payment)`
-              : `Enter at least ${rupees(MIN_RECHARGE)}.`}
-          </div>
-        </form>
-
-        <form onSubmit={handleWithdraw} className="mt-4 border-t border-brand-blue/30 pt-4">
-          {withdrawError && <div className={errorBoxClass}>{withdrawError}</div>}
-          {withdrawn && (
-            <div className={infoBoxSuccessClass}>
-              <Icon name="checkCircle" className={inlineIconClass} />
-              {pts(withdrawn.points)} settled as promotional rebate · {rupees(withdrawn.amount)} reimbursed to{' '}
-              {withdrawn.bankName || 'your settlement account'} ··{withdrawn.accountLast4}
-              {withdrawn.fee > 0 && ` (after ${rupees(withdrawn.fee)} platform settlement & audit fee)`}. Ref:{' '}
-              {withdrawn.reference}
-            </div>
-          )}
-          <label className={labelClass}>
-            Claim Marketing Reimbursement (1 pt = ₹1
-            {withdrawalFeePercent > 0 ? `, Platform Settlement & Audit Fee ${withdrawalFeePercent}%` : ''})
-          </label>
-          <div className="flex flex-wrap items-stretch gap-2 sm:flex-nowrap">
-            <input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              max={withdrawMax || undefined}
-              step="1"
-              placeholder={withdrawMax > 0 ? `Up to ${withdrawMax.toLocaleString('en-IN')}` : '0'}
-              value={withdrawAmount}
-              disabled={!bankLast4 || withdrawMax === 0}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
-            />
-            <button
-              type="button"
-              className={`${btnSecondary} whitespace-nowrap`}
-              disabled={!bankLast4 || withdrawMax === 0}
-              onClick={() => setWithdrawAmount(String(withdrawMax))}
-            >
-              Max
-            </button>
-            <button
-              type="submit"
-              className={`${btnPrimary} basis-full whitespace-nowrap sm:basis-auto`}
-              disabled={withdrawing || !withdrawValid || !bankLast4}
-            >
-              {withdrawing ? 'Processing…' : 'Settle Promotional Rebate'}
-            </button>
-          </div>
-          <div className="mt-1.5 text-xs text-brand-navy/70">
-            {!bankLast4
-              ? 'No settlement account on file — contact support to add your business account details.'
-              : withdrawValid
-                ? withdrawFee > 0
-                  ? `${rupees(withdrawValue)} − ${rupees(withdrawFee)} platform settlement & audit fee (${withdrawalFeePercent}%) = ${rupees(withdrawNet)} reimbursed to ${merchant.bankName || 'your settlement account'} ··${bankLast4} (test settlement).`
-                  : `${rupees(withdrawValue)} reimbursed to ${merchant.bankName || 'your settlement account'} ··${bankLast4} (test settlement).`
-                : `Reimbursements are settled to ${merchant.bankName || 'your settlement account'} ··${bankLast4}.`}{' '}
-            Today: {withdrawnToday.toLocaleString('en-IN')} / {dailyWithdrawalLimit.toLocaleString('en-IN')} pts settled
-            {withdrawLeftToday === 0 && ' — daily limit reached, try again tomorrow'}.
-          </div>
-        </form>
-      </div>
-
-      <div className={panelClass}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <PanelTitle icon="tag" className="m-0">
-              Your Discount %
-            </PanelTitle>
-            <p className="mt-1 mb-0 text-[13px] text-slate-500">
-              Members get this % of their bill as reward points. A ₹500 bill at {mainDiscount}% earns{' '}
-              {pts(Math.floor((500 * mainDiscount) / 100))}.
-            </p>
-          </div>
-          {discountDraft === null && (
-            <div className="text-right">
-              <div className="text-2xl font-extrabold text-slate-900">{mainDiscount}%</div>
-              <button
-                type="button"
-                className="text-xs font-semibold text-brand-blue hover:underline"
-                onClick={() => {
-                  setDiscountDraft(String(mainDiscount))
-                  setDiscountSaved(false)
-                }}
-              >
-                Change
-              </button>
-            </div>
-          )}
-        </div>
-
-        {discountSaved && (
-          <div className={`${infoBoxSuccessClass} mt-3 mb-0`}>
-            <Icon name="checkCircle" className={inlineIconClass} />
-            Discount updated to {mainDiscount}%.
-          </div>
-        )}
-
-        {discountDraft !== null && (
-          <form onSubmit={saveDiscount} className="mt-3">
-            {discountError && <div className={errorBoxClass}>{discountError}</div>}
-            <div className="flex items-stretch gap-2">
-              <input
-                type="number"
-                inputMode="decimal"
-                min="0.01"
-                max="100"
-                step="0.01"
-                value={discountDraft}
-                onChange={(e) => setDiscountDraft(e.target.value)}
-                className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
-                autoFocus
-              />
-              <button type="submit" className={`${btnPrimary} whitespace-nowrap`} disabled={savingDiscount}>
-                {savingDiscount ? 'Saving…' : 'Save'}
-              </button>
-              <button
-                type="button"
-                className={`${btnSecondary} whitespace-nowrap`}
-                onClick={() => {
-                  setDiscountDraft(null)
-                  setDiscountError('')
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        )}
-      </div>
-
-      {referralCode && (
-        <div className={panelClass}>
-          <PanelTitle icon="ticket">Your Referral Code</PanelTitle>
-          <p className="mb-3 text-[13px] text-slate-500">
-            Share this with your customers — they can use it to sign up as ALEOS members. New customers you add while
-            giving points also count as your referrals.
-          </p>
-
-          <div className="mb-3 flex items-stretch gap-2">
-            <div className="flex min-w-0 flex-1 items-center rounded-lg border border-slate-300 bg-white px-3.5 font-mono text-lg font-bold tracking-wider text-slate-900">
-              {referralCode}
-            </div>
-            <button type="button" className={`${btnSecondary} whitespace-nowrap`} onClick={() => copyText(referralCode, 'code')}>
-              {copied === 'code' ? (
-                <>
-                  <Icon name="check" className="mr-1.5 h-4 w-4" strokeWidth={3} />
-                  Copied
-                </>
-              ) : (
-                'Copy Code'
-              )}
-            </button>
-          </div>
-
-          <div className="mb-3 flex items-stretch gap-2">
-            <input
-              type="text"
-              readOnly
-              value={referralLink}
-              className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1 text-xs`}
-            />
-            <button type="button" className={`${btnSecondary} whitespace-nowrap`} onClick={() => copyText(referralLink, 'link')}>
-              {copied === 'link' ? (
-                <>
-                  <Icon name="check" className="mr-1.5 h-4 w-4" strokeWidth={3} />
-                  Copied
-                </>
-              ) : (
-                'Copy Link'
-              )}
-            </button>
-          </div>
-
-          <ShareButtons
-            message={referralMessage}
-            link={referralLink}
-            telegramText={`Join ALEOS Rewards and earn points at ${merchant.businessName}!`}
-          />
-
-          <div className="mt-4 text-[13px] text-slate-600">
-            <span className="font-semibold">Members joined with your code: {data.referrals.length}</span>
-            {data.referrals.length > 0 && (
-              <span className="text-slate-500"> — {data.referrals.map((r) => r.name || r.email).join(', ')}</span>
-            )}
-          </div>
-        </div>
-      )}
-
-      <div className="mb-5 grid grid-cols-2 gap-3">
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-center">
-          <div className="text-xs font-bold uppercase text-green-800">Points Given</div>
-          <div className="text-3xl font-extrabold text-green-700">{pts(totalPoints)}</div>
-        </div>
-        <div className="rounded-2xl border border-brand-blue/20 bg-brand-light p-4 text-center">
-          <div className="text-xs font-bold uppercase text-slate-500">Sales Recorded</div>
-          <div className="text-3xl font-extrabold text-brand-blue">{rupees(totalSales)}</div>
-        </div>
-      </div>
-
       <div className={panelClass}>
         <PanelTitle icon="gift">Give Reward Points</PanelTitle>
         <p className="mb-3 text-[13px] text-slate-500">
@@ -953,6 +712,246 @@ export default function MerchantDashboard() {
             )}
           </form>
         )}
+      </div>
+
+      <div className="mb-5 rounded-2xl border border-brand-blue/30 bg-brand-light p-4">
+        <div className="flex items-center gap-1.5 text-xs font-bold uppercase text-brand-navy">
+          <Icon name="coins" className="h-4 w-4" />
+          Available Promotional Credits
+        </div>
+        <div className="text-3xl font-extrabold text-brand-navy">{pts(walletBalance)}</div>
+        <div className="mt-0.5 text-xs text-brand-navy/70">
+          Credits you can issue to members as reward points. Each ₹1 of campaign quota = 1 credit, plus {GST_PERCENT} GST.
+        </div>
+
+        <form onSubmit={handleRecharge} className="mt-4 border-t border-brand-blue/30 pt-4">
+          {rechargeError && <div className={errorBoxClass}>{rechargeError}</div>}
+          {recharged && (
+            <div className={infoBoxSuccessClass}>
+              <Icon name="checkCircle" className={inlineIconClass} />
+              {pts(recharged.points)} of promotional credits purchased for {rupees(recharged.amount)}. Ref:{' '}
+              {recharged.reference}
+            </div>
+          )}
+          <label className={labelClass}>Purchase Promotional Credits (₹, minimum {rupees(MIN_RECHARGE)})</label>
+          <div className="flex flex-wrap items-stretch gap-2 sm:flex-nowrap">
+            <input
+              type="number"
+              inputMode="numeric"
+              min={MIN_RECHARGE}
+              step="1"
+              value={rechargeAmount}
+              onChange={(e) => setRechargeAmount(e.target.value)}
+              className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
+            />
+            <button
+              type="submit"
+              className={`${btnPrimary} basis-full whitespace-nowrap sm:basis-auto`}
+              disabled={recharging || !rechargeValid}
+            >
+              {recharging ? 'Processing…' : 'Top up Campaign Quota'}
+            </button>
+          </div>
+          <div className="mt-1.5 text-xs text-brand-navy/70">
+            {rechargeValid
+              ? `You receive ${pts(rechargeValue)} of promotional credits · ${rupees(rechargeValue)} + ${rupees(rechargeGst)} GST (${GST_PERCENT}) = ${rupees(rechargeValue + rechargeGst)} (test payment)`
+              : `Enter at least ${rupees(MIN_RECHARGE)}.`}
+          </div>
+        </form>
+
+        <form onSubmit={handleWithdraw} className="mt-4 border-t border-brand-blue/30 pt-4">
+          {withdrawError && <div className={errorBoxClass}>{withdrawError}</div>}
+          {withdrawn && (
+            <div className={infoBoxSuccessClass}>
+              <Icon name="checkCircle" className={inlineIconClass} />
+              {pts(withdrawn.points)} settled as promotional rebate · {rupees(withdrawn.amount)} reimbursed to{' '}
+              {withdrawn.bankName || 'your settlement account'} ··{withdrawn.accountLast4}
+              {withdrawn.fee > 0 && ` (after ${rupees(withdrawn.fee)} platform settlement & audit fee)`}. Ref:{' '}
+              {withdrawn.reference}
+            </div>
+          )}
+          <label className={labelClass}>
+            Claim Marketing Reimbursement (1 pt = ₹1
+            {withdrawalFeePercent > 0 ? `, Platform Settlement & Audit Fee ${withdrawalFeePercent}%` : ''})
+          </label>
+          <div className="flex flex-wrap items-stretch gap-2 sm:flex-nowrap">
+            <input
+              type="number"
+              inputMode="numeric"
+              min="1"
+              max={withdrawMax || undefined}
+              step="1"
+              placeholder={withdrawMax > 0 ? `Up to ${withdrawMax.toLocaleString('en-IN')}` : '0'}
+              value={withdrawAmount}
+              disabled={!bankLast4 || withdrawMax === 0}
+              onChange={(e) => setWithdrawAmount(e.target.value)}
+              className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
+            />
+            <button
+              type="button"
+              className={`${btnSecondary} whitespace-nowrap`}
+              disabled={!bankLast4 || withdrawMax === 0}
+              onClick={() => setWithdrawAmount(String(withdrawMax))}
+            >
+              Max
+            </button>
+            <button
+              type="submit"
+              className={`${btnPrimary} basis-full whitespace-nowrap sm:basis-auto`}
+              disabled={withdrawing || !withdrawValid || !bankLast4}
+            >
+              {withdrawing ? 'Processing…' : 'Settle Promotional Rebate'}
+            </button>
+          </div>
+          <div className="mt-1.5 text-xs text-brand-navy/70">
+            {!bankLast4
+              ? 'No settlement account on file — contact support to add your business account details.'
+              : withdrawValid
+                ? withdrawFee > 0
+                  ? `${rupees(withdrawValue)} − ${rupees(withdrawFee)} platform settlement & audit fee (${withdrawalFeePercent}%) = ${rupees(withdrawNet)} reimbursed to ${merchant.bankName || 'your settlement account'} ··${bankLast4} (test settlement).`
+                  : `${rupees(withdrawValue)} reimbursed to ${merchant.bankName || 'your settlement account'} ··${bankLast4} (test settlement).`
+                : `Reimbursements are settled to ${merchant.bankName || 'your settlement account'} ··${bankLast4}.`}{' '}
+            Today: {withdrawnToday.toLocaleString('en-IN')} / {dailyWithdrawalLimit.toLocaleString('en-IN')} pts settled
+            {withdrawLeftToday === 0 && ' — daily limit reached, try again tomorrow'}.
+          </div>
+        </form>
+      </div>
+
+      <div className={panelClass}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <PanelTitle icon="tag" className="m-0">
+              Your Discount %
+            </PanelTitle>
+            <p className="mt-1 mb-0 text-[13px] text-slate-500">
+              Members get this % of their bill as reward points. A ₹500 bill at {mainDiscount}% earns{' '}
+              {pts(Math.floor((500 * mainDiscount) / 100))}.
+            </p>
+          </div>
+          {discountDraft === null && (
+            <div className="text-right">
+              <div className="text-2xl font-extrabold text-slate-900">{mainDiscount}%</div>
+              <button
+                type="button"
+                className="text-xs font-semibold text-brand-blue hover:underline"
+                onClick={() => {
+                  setDiscountDraft(String(mainDiscount))
+                  setDiscountSaved(false)
+                }}
+              >
+                Change
+              </button>
+            </div>
+          )}
+        </div>
+
+        {discountSaved && (
+          <div className={`${infoBoxSuccessClass} mt-3 mb-0`}>
+            <Icon name="checkCircle" className={inlineIconClass} />
+            Discount updated to {mainDiscount}%.
+          </div>
+        )}
+
+        {discountDraft !== null && (
+          <form onSubmit={saveDiscount} className="mt-3">
+            {discountError && <div className={errorBoxClass}>{discountError}</div>}
+            <div className="flex items-stretch gap-2">
+              <input
+                type="number"
+                inputMode="decimal"
+                min="0.01"
+                max="100"
+                step="0.01"
+                value={discountDraft}
+                onChange={(e) => setDiscountDraft(e.target.value)}
+                className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1`}
+                autoFocus
+              />
+              <button type="submit" className={`${btnPrimary} whitespace-nowrap`} disabled={savingDiscount}>
+                {savingDiscount ? 'Saving…' : 'Save'}
+              </button>
+              <button
+                type="button"
+                className={`${btnSecondary} whitespace-nowrap`}
+                onClick={() => {
+                  setDiscountDraft(null)
+                  setDiscountError('')
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+
+      {referralCode && (
+        <div className={panelClass}>
+          <PanelTitle icon="ticket">Your Referral Code</PanelTitle>
+          <p className="mb-3 text-[13px] text-slate-500">
+            Share this with your customers — they can use it to sign up as ALEOS members. New customers you add while
+            giving points also count as your referrals.
+          </p>
+
+          <div className="mb-3 flex items-stretch gap-2">
+            <div className="flex min-w-0 flex-1 items-center rounded-lg border border-slate-300 bg-white px-3.5 font-mono text-lg font-bold tracking-wider text-slate-900">
+              {referralCode}
+            </div>
+            <button type="button" className={`${btnSecondary} whitespace-nowrap`} onClick={() => copyText(referralCode, 'code')}>
+              {copied === 'code' ? (
+                <>
+                  <Icon name="check" className="mr-1.5 h-4 w-4" strokeWidth={3} />
+                  Copied
+                </>
+              ) : (
+                'Copy Code'
+              )}
+            </button>
+          </div>
+
+          <div className="mb-3 flex items-stretch gap-2">
+            <input
+              type="text"
+              readOnly
+              value={referralLink}
+              className={`${inputClass.replace('mb-4 ', '')} min-w-0 flex-1 text-xs`}
+            />
+            <button type="button" className={`${btnSecondary} whitespace-nowrap`} onClick={() => copyText(referralLink, 'link')}>
+              {copied === 'link' ? (
+                <>
+                  <Icon name="check" className="mr-1.5 h-4 w-4" strokeWidth={3} />
+                  Copied
+                </>
+              ) : (
+                'Copy Link'
+              )}
+            </button>
+          </div>
+
+          <ShareButtons
+            message={referralMessage}
+            link={referralLink}
+            telegramText={`Join ALEOS Rewards and earn points at ${merchant.businessName}!`}
+          />
+
+          <div className="mt-4 text-[13px] text-slate-600">
+            <span className="font-semibold">Members joined with your code: {data.referrals.length}</span>
+            {data.referrals.length > 0 && (
+              <span className="text-slate-500"> — {data.referrals.map((r) => r.name || r.email).join(', ')}</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="mb-5 grid grid-cols-2 gap-3">
+        <div className="rounded-2xl border border-green-200 bg-green-50 p-4 text-center">
+          <div className="text-xs font-bold uppercase text-green-800">Points Given</div>
+          <div className="text-3xl font-extrabold text-green-700">{pts(totalPoints)}</div>
+        </div>
+        <div className="rounded-2xl border border-brand-blue/20 bg-brand-light p-4 text-center">
+          <div className="text-xs font-bold uppercase text-slate-500">Sales Recorded</div>
+          <div className="text-3xl font-extrabold text-brand-blue">{rupees(totalSales)}</div>
+        </div>
       </div>
 
       <MerchantHistory

@@ -812,7 +812,7 @@ export default function AdminDashboard() {
           </PanelTitle>
           <p className="mt-0 mb-3 text-[13px] text-slate-500">
             The amounts a new merchant can choose from at sign-up. They get 1 point for every ₹1 (₹2,000 = 2,000
-            points), plus the convenience fee on top. Up to {SIGNUP_RECHARGE_MAX_OPTIONS} amounts, each
+            points), plus 18% GST on top. Up to {SIGNUP_RECHARGE_MAX_OPTIONS} amounts, each
             from ₹{SIGNUP_RECHARGE_MIN.toLocaleString('en-IN')} to ₹{SIGNUP_RECHARGE_MAX.toLocaleString('en-IN')}.
           </p>
           {optionsSaved && (

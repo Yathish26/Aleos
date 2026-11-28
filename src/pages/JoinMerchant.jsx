@@ -49,10 +49,10 @@ const upperCase = ['ifsc', 'panNumber']
 const bankCheckFields = ['accountHolderName', 'ifsc', 'accountNumber']
 const BANK_POLL_MS = 3000
 
-// Must match CONVENIENCE_FEE_RATE on the server: ₹1 = 1 point, plus a 3% convenience fee (no onboarding fee).
+// Must match GST_RATE on the server: ₹1 = 1 point, plus 18% GST (no convenience or onboarding fee).
 // The recharge amounts themselves are set by the admin and come from /merchants/categories.
-const CONVENIENCE_FEE_RATE = 0.03
-const FEE_PERCENT = `${CONVENIENCE_FEE_RATE * 100}%`
+const GST_RATE = 0.18
+const GST_PERCENT = `${GST_RATE * 100}%`
 const toPaise = (n) => Math.round(n * 100) / 100
 const rupees = (n) => `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`
 
@@ -144,8 +144,8 @@ export default function JoinMerchant() {
   const [rechargeOptions, setRechargeOptions] = useState([])
   const [rechargeValue, setRechargeValue] = useState(0)
   const rechargeValid = rechargeOptions.includes(rechargeValue)
-  const rechargeFee = toPaise(rechargeValue * CONVENIENCE_FEE_RATE)
-  const rechargeTotal = toPaise(rechargeValue + rechargeFee)
+  const rechargeGst = toPaise(rechargeValue * GST_RATE)
+  const rechargeTotal = toPaise(rechargeValue + rechargeGst)
   // Restaurants and grocery shops may add an FSSAI licence number
   const asksFssai = fssaiCategories.includes(category)
 
@@ -796,8 +796,8 @@ export default function JoinMerchant() {
                   <span className="font-semibold whitespace-nowrap text-slate-900">{rupees(rechargeValue)}</span>
                 </div>
                 <div className="flex justify-between gap-3 py-0.5">
-                  <span>Convenience fee ({FEE_PERCENT})</span>
-                  <span className="font-semibold whitespace-nowrap text-slate-900">{rupees(rechargeFee)}</span>
+                  <span>GST ({GST_PERCENT})</span>
+                  <span className="font-semibold whitespace-nowrap text-slate-900">{rupees(rechargeGst)}</span>
                 </div>
                 <div className="mt-1.5 flex justify-between border-t border-slate-200 pt-2 text-sm font-bold text-slate-900">
                   <span>Total to pay</span>

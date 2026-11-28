@@ -237,7 +237,9 @@ export default function MerchantHistory({
                     </td>
                     <td className={`${tdClass} text-right`}>
                       <span className="block font-semibold">{rupees(p.amount)}</span>
-                      <span className="text-xs text-slate-500">incl. {rupees(p.convenienceFee)} convenience fee</span>
+                      <span className="text-xs text-slate-500">
+                        {p.gst > 0 ? `incl. ${rupees(p.gst)} GST` : `incl. ${rupees(p.convenienceFee || 0)} convenience fee`}
+                      </span>
                       {p.onboardingFee > 0 && (
                         <span className="block text-xs text-slate-500">
                           + {rupees(p.onboardingFee)} onboarding + {rupees(p.onboardingTax || 0)} GST

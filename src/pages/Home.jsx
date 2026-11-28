@@ -141,7 +141,7 @@ const benefits = [
   { icon: 'mapPin', title: 'Discover local', text: 'Find nearby plumbers, job openings, and local events.' },
   {
     icon: 'coins',
-    title: 'Get Points when friends shop',
+    title: 'Get Points when friend shops',
     text: 'When your friends start spending in listed Aleos Merchant place you will start collecting promotional points',
   },
   { icon: 'trending', title: 'Grow with your city', text: 'More shops join every week — more places to earn and spend.' },
@@ -357,13 +357,6 @@ export default function Home() {
 
             <div className="mx-auto flex max-w-sm flex-col items-stretch gap-3 sm:mx-0 sm:max-w-none sm:flex-row sm:items-center sm:gap-4">
               <JoinDropdown />
-              <Link
-                to="/login"
-                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/20 px-6 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                Member login
-                <Icon name="arrowRight" className="h-4 w-4" />
-              </Link>
             </div>
 
             <div className="mt-6 flex flex-wrap justify-center gap-x-4 gap-y-2 text-[13px] text-blue-100/80 sm:mt-8 sm:justify-start sm:gap-x-6 sm:text-sm">
@@ -403,36 +396,6 @@ export default function Home() {
                 <h3 className="m-0 mb-1 text-base font-bold text-brand-navy sm:mb-2 sm:text-lg">{step.title}</h3>
                 <p className="m-0 text-sm leading-relaxed text-slate-500 sm:text-[15px]">{step.text}</p>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Partner businesses */}
-      <section className={`${containerClass} pb-14 sm:pb-24`}>
-        <SectionHeading
-          eyebrow="Our partners"
-          title="Earn points at places you already love"
-          text="Cafes, tiffin centres and restaurants across Moodbidri are already part of ALEOS."
-        />
-
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
-          {partners.map((p) => (
-            <div
-              key={p.name}
-              className="rounded-2xl border border-slate-100 bg-white p-4 shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-blue/10 sm:rounded-3xl sm:p-5"
-            >
-              <span className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-brand-light text-xl sm:mb-4 sm:h-12 sm:w-12 sm:text-2xl">
-                {p.emoji}
-              </span>
-              <h3 className="m-0 mb-1 text-sm leading-snug font-bold text-brand-navy sm:text-base">{p.name}</h3>
-              <div className="flex items-center gap-1 text-xs text-slate-500 sm:text-[13px]">
-                <Icon name="mapPin" className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{p.area}</span>
-              </div>
-              <span className="mt-3 inline-block rounded-full bg-brand-light px-2.5 py-0.5 text-[11px] font-semibold text-brand-blue sm:text-xs">
-                {p.category}
-              </span>
             </div>
           ))}
         </div>
@@ -535,36 +498,6 @@ export default function Home() {
                 <p className="m-0 text-sm leading-relaxed text-slate-600 sm:text-base">{p.text}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Closing call to action */}
-      <section className="px-4 py-14 sm:py-24">
-        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-linear-to-r from-brand-navy via-[#123f8a] to-brand-blue px-5 py-10 text-center text-white sm:px-12 sm:py-16">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.1)_1px,transparent_0)] bg-size-[22px_22px]" />
-          <div className="relative">
-            <h2 className="m-0 text-xl leading-snug font-extrabold tracking-tight sm:text-4xl">
-              More than a website — it's a world of opportunities.
-            </h2>
-            <p className="mx-auto mt-3 mb-6 max-w-xl text-sm text-blue-100/90 sm:mt-4 sm:mb-8 sm:text-base">
-              Join the shoppers and local businesses growing together on ALEOS.
-            </p>
-            <div className="mx-auto flex max-w-sm flex-col justify-center gap-3 sm:max-w-none sm:flex-row">
-              <Link
-                to="/join/member"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand-cyan px-7 py-3.5 text-sm font-bold text-brand-navy transition-colors hover:bg-white"
-              >
-                Start Collecting Promotional Points
-                <Icon name="arrowRight" className="h-4 w-4" />
-              </Link>
-              <Link
-                to="/join/merchant"
-                className="inline-flex items-center justify-center rounded-xl border border-white/30 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/10"
-              >
-                List your business
-              </Link>
-            </div>
           </div>
         </div>
       </section>
